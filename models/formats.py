@@ -109,7 +109,7 @@ class League:
                 toplay = {team: [t for t in self.teams if t != team] for team in self.teams}
         return True
 
-    def generate_league_match_schedule(self):
+    def generate_league_match_schedule(self, max_retries=10_000):
         retrys = 0
         total_teams = len(self.teams)
         total_matchdays = (total_teams - 1) * 2
@@ -123,16 +123,10 @@ class League:
                     matchday = []
                     matchday_to_play = list(self.teams)
                     while len(matchday_to_play) > 0:
-                        choosen = random.choice(matchday_to_play)
-                        possibilities = [
-                            match for match in
-                            all_matches if
-                            (match.home == choosen or match.away == choosen) and
-                            match.away in matchday_to_play and match.home in matchday_to_play
-                            and match.away in toplay[match.home]
-                            and match.home in toplay[match.away]
-                        ]
-                        if len(possibilities) == 0:
+                        choosen = min(matchday_to_play,
+                                      key=lambda team: len(self.get_team_possibilities(all_matches, team, matchday_to_play, toplay)))
+                        possibilities = self.get_team_possibilities(all_matches, choosen, matchday_to_play, toplay)
+                        if len(possibilities) != 0:
                             pass
                         match: [FootballGame] = random.choice(possibilities)
                         all_matches.remove(match)
@@ -149,4 +143,15 @@ class League:
                 return matchdays
             except IndexError:
                 retrys += 1
-                print("retry", retrys)
+                if retrys >= max_retries:
+                    raise RuntimeError("Failed to generate a valid schedule within the maximum number of retries")
+
+    def get_team_possibilities(self, all_matches, team, matchday_to_play, toplay):
+        # return [match for match in all_matches if (match.home == team or match.away == team)]
+        return [match for match in
+                all_matches if
+                (match.home == team or match.away == team) and
+                match.away in matchday_to_play and match.home in matchday_to_play
+                and match.away in toplay[match.home]
+                and match.home in toplay[match.away]
+            ]
