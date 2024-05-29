@@ -1,5 +1,4 @@
-from game import FootballGame
-from formats import League
+from models.formats import League
 
 JPL = League(["club brugge", "kv oostende", "krc genk", "westerlo"])
 print(JPL)

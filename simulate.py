@@ -1,6 +1,6 @@
 from predict import predict_game, predict_league
-from game import FootballGame
-from formats import League
+from models.game import FootballGame
+from models.formats import League
 
 
 def simulate_game(game: FootballGame, n):
@@ -21,8 +21,9 @@ def simulate_game(game: FootballGame, n):
 
     return {"home_win": home_win_chance, "draw": draw_chance, "away_win": away_win_chance}
 
+
 def simulate_league(league: League, n):
-    position_counts = {team: [0 for _ in range(len(league.teams))] for team in league.teams}
+    position_counts = {team.name: [0 for _ in range(len(league.teams))] for team in league.teams}
 
     for _ in range(n):
         standings = predict_league(league).get_standings()
