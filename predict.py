@@ -4,8 +4,7 @@ import random
 
 
 def predict_game(game: FootballGame, silent: bool = True):
-    if not game.home.position_prev_season == 0 or not game.away.position_prev_season == 0:
-        print("Game")
+    if not game.home.position_prev_season == 0 and not game.away.position_prev_season == 0:
         # Adjust goal probability based on the previous season's position
         home_position_factor = max(1, 20 - game.home.position_prev_season)  # Lower position number should mean better team
         away_position_factor = max(1, 20 - game.away.position_prev_season)  # Lower position number should mean better team

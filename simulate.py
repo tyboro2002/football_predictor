@@ -23,17 +23,17 @@ def simulate_game(game: FootballGame, n):
     return {"home_win": home_win_chance, "draw": draw_chance, "away_win": away_win_chance}
 
 
-def simulate_once(league_data):
-    standings = predict_league(league_data).get_standings()
+def simulate_once(league):
+    standings = predict_league(league).get_standings()
     return [team for team, _ in standings]
 
 
-def worker_simulation(league_data, n):
-    num_teams = len(league_data.teams)
-    position_counts = {team.name: [0] * num_teams for team in league_data.teams}
+def worker_simulation(league, n):
+    num_teams = len(league.teams)
+    position_counts = {team.name: [0] * num_teams for team in league.teams}
 
     for _ in range(n):
-        standings = simulate_once(league_data)
+        standings = simulate_once(league)
         for i, team in enumerate(standings):
             position_counts[team][i] += 1
 

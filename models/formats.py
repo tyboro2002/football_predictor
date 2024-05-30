@@ -20,7 +20,7 @@ class League:
 
         if self.prev_standings is not None:
             for team in self.teams:
-                team.prev_standings = self.prev_standings[team.name]
+                team.position_prev_season = self.prev_standings[team.name]
         assert self.check_leauge(self.matchdays)
 
     def record_match_result(self, home_team, away_team, home_goals, away_goals):
@@ -72,7 +72,7 @@ class League:
         return df.to_string(index=False)
 
     def copy(self):
-        new_league = League(deepcopy([(team.name, team.position_prev_season) for team in self.teams]))
+        new_league = League([(team.name, self.prev_standings[team.name]) for team in self.teams])
         new_league.standings = deepcopy(self.standings)
         new_league.matchdays = deepcopy(self.matchdays)
         return new_league
