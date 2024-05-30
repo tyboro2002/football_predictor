@@ -90,6 +90,7 @@ def visualize_league(league, save_location):
 
     # Save the figure
     plt.savefig(save_location)
+    plt.close(fig)
 
 
 def visualize_match_list(data, save_location):
@@ -130,6 +131,7 @@ def visualize_match_list(data, save_location):
 
     # Save the figure
     plt.savefig(save_location, bbox_inches='tight')
+    plt.close(fig)
 
 
 def visualize_matchday_results(matchday_results, save_location):

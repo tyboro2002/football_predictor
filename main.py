@@ -1,6 +1,6 @@
 from models.formats import League
 from predict import predict_league
-from simulate import simulate_game, simulate_league
+from simulate import simulate_league
 from visualize import visualize_position_chances, visualize_league, visualize_league_matches, visualize_all_team_matches
 import time
 
@@ -19,22 +19,22 @@ def get_team_location(team_name):
 
 JPL = League(
     [
-        ("Club brugge", 1),
-        ("Union", 2),
-        ("Anderlecht", 3),
-        ("Cercle brugge", 4),
-        ("Krc genk", 5),
-        ("Antwerpen", 6),
-        ("Gent", 7),
-        ("Kv mechelen", 8),
-        ("Stvv", 9),
-        ("Oh leuven", 10),
-        ("Westerlo", 11),
-        ("Standard", 12),
-        ("Charlerio", 13),
-        ("Kv korterijk", 14),
-        ("Rwdm", 15),
-        ("Kas eupen", 16)
+        ("Club brugge", (1,)),
+        ("Union", (2,)),
+        ("Anderlecht", (3,)),
+        ("Cercle brugge", (4,)),
+        ("Krc genk", (5,)),
+        ("Antwerpen", (6,)),
+        ("Gent", (7,)),
+        ("Kv mechelen", (8,)),
+        ("Stvv", (9,)),
+        ("Oh leuven", (10,)),
+        ("Westerlo", (11,)),
+        ("Standard", (12,)),
+        ("Charlerio", (13,)),
+        ("Kv korterijk", (14,)),
+        ("Rwdm", (15,)),
+        ("Kas eupen", (16,))
     ]
 )
 

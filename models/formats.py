@@ -5,6 +5,7 @@ from copy import deepcopy
 import random
 import itertools
 import pandas as pd
+import numpy as np
 
 
 class League:
@@ -12,11 +13,16 @@ class League:
         if len(teams) % 2 != 0:
             raise ValueError("The number of teams must be even.")
 
+        def calculate_position_factor(l):
+            l = [len(teams) / 2 if val == "DNP" else val for val in l]
+            return np.mean(l)
+
         self.teams = [Team(team[0]) for team in teams]
-        self.standings = {team[0]: {"played": 0, "won": 0, "drawn": 0, "lost": 0, "points": 0, "scored": 0, "conceded": 0}
-                          for team in teams}
+        self.standings = {
+            team[0]: {"played": 0, "won": 0, "drawn": 0, "lost": 0, "points": 0, "scored": 0, "conceded": 0}
+            for team in teams}
         self.matchdays = self.generate_league_match_schedule()
-        self.prev_standings = {team[0]: team[1] for team in teams}
+        self.prev_standings = {team[0]: calculate_position_factor(team[1]) for team in teams}
 
         if self.prev_standings is not None:
             for team in self.teams:
@@ -72,7 +78,7 @@ class League:
         return df.to_string(index=False)
 
     def copy(self):
-        new_league = League([(team.name, self.prev_standings[team.name]) for team in self.teams])
+        new_league = League([(team.name, (self.prev_standings[team.name],)) for team in self.teams])
         new_league.standings = deepcopy(self.standings)
         new_league.matchdays = deepcopy(self.matchdays)
         return new_league
@@ -124,7 +130,8 @@ class League:
                     matchday_to_play = list(self.teams)
                     while len(matchday_to_play) > 0:
                         choosen = min(matchday_to_play,
-                                      key=lambda team: len(self.get_team_possibilities(all_matches, team, matchday_to_play, toplay)))
+                                      key=lambda team: len(
+                                          self.get_team_possibilities(all_matches, team, matchday_to_play, toplay)))
                         possibilities = self.get_team_possibilities(all_matches, choosen, matchday_to_play, toplay)
                         if len(possibilities) != 0:
                             pass
@@ -154,4 +161,4 @@ class League:
                 match.away in matchday_to_play and match.home in matchday_to_play
                 and match.away in toplay[match.home]
                 and match.home in toplay[match.away]
-            ]
+                ]
