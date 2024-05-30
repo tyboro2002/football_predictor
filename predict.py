@@ -34,6 +34,7 @@ def predict_game(game: FootballGame, silent: bool = True):
         return game
         # return random.choice([game.home, game.away, "draw"])
 
+
 def predict_league(inp_league: League, silent: bool = True):
     league = inp_league.copy()
     playday = 1

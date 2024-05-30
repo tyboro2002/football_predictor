@@ -9,7 +9,7 @@ def visualize_position_chances(data, save_location, League):
 
     # Create a heatmap
     plt.figure(figsize=(12, 8))
-    sns.heatmap(df.T, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5)
+    sns.heatmap(df.T, annot=True, cmap='coolwarm', fmt=".3f", linewidths=.5)
     plt.title("Probability of Teams Finishing in Each Position")
     plt.xlabel("Position")
     plt.ylabel("Team")

@@ -1,9 +1,10 @@
 from models.formats import League
 from simulate import simulate_game, simulate_league
 from visualize import visualize_position_chances
+import time
 
 save_location = "results/league_probabilities.png"
-amount_of_simulations = 100_000
+amount_of_simulations = 10_000
 
 JPL = League(
     [
@@ -31,10 +32,15 @@ JPL = League(
 #     print(matchday)
 
 # print(simulate_game(JPL.matchdays[0][0], 10))
-data = simulate_league(JPL, amount_of_simulations)
-print(data)
 
-visualize_position_chances(data, save_location, JPL)
+if __name__ == '__main__':
+    start_time = time.time()
+    data = simulate_league(JPL, amount_of_simulations)
+    end_time = time.time()
+
+    print(f"Multiprocessing simulation time: {end_time - start_time} seconds")
+    print(data)
+    visualize_position_chances(data, save_location, JPL)
 
 
 # print(predict_league(JPL))
