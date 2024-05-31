@@ -1,12 +1,16 @@
+import argparse
+
 from models.formats import League
 from predict import predict_league
 from simulate import simulate_league
 from visualize import visualize_position_chances, visualize_league, visualize_league_matches, visualize_all_team_matches
+from parser import parse_match_list
 import time
 
 save_location = "results/league_probabilities.png"
 save_location2 = "results/league1.png"
-amount_of_simulations = 100
+match_list_location = "input_data/matches.csv"
+amount_of_simulations = 1
 
 
 def get_matchday_location(day):
@@ -45,16 +49,18 @@ JPL = League(
 # print(simulate_game(JPL.matchdays[0][0], 10))
 
 if __name__ == '__main__':
-    start_time = time.time()
-    data = simulate_league(JPL, amount_of_simulations)
-    end_time = time.time()
+    print(parse_match_list(match_list_location))
 
-    print(f"Multiprocessing simulation time: {end_time - start_time} seconds")
-    print("data", data)
-    visualize_position_chances(data, save_location, JPL)
-    predicted = predict_league(JPL)
-    visualize_league(predicted, save_location2)
-    visualize_league_matches(predicted, get_matchday_location)
-    visualize_all_team_matches(predicted, get_team_location)
+    # start_time = time.time()
+    # data = simulate_league(JPL, amount_of_simulations)
+    # end_time = time.time()
+
+    # print(f"Multiprocessing simulation time: {end_time - start_time} seconds")
+    # print("data", data)
+    # visualize_position_chances(data, save_location, JPL)
+    # predicted = predict_league(JPL)
+    # visualize_league(predicted, save_location2)
+    # visualize_league_matches(predicted, get_matchday_location)
+    # visualize_all_team_matches(predicted, get_team_location)
 
 # print(predict_league(JPL))

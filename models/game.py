@@ -1,4 +1,8 @@
 class FootballGame:
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
     def __init__(self, home, away):
         self.home = home
         self.away = away

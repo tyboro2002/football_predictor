@@ -39,7 +39,7 @@ def calculate_team_form(team, last_matchdays_results):
                     form.append('D')
 
     # Combine the form into a string
-    return ''.join(form)  # Get the last 5 matches form
+    return ''.join(form)  # Get the last 5 matches.csv form
 
 
 def visualize_league(league, save_location):
