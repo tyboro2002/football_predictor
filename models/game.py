@@ -49,7 +49,7 @@ class FootballGame:
 
     def __repr__(self):
         if self.home_score is not None:
-            return f"{self.home} {self.home_score} - {self.away} {self.away_score}"
+            return f"{self.home} {self.home_score} - {self.away_score} {self.away}"
         return f"{self.home} vs {self.away}"
 
     def __eq__(self, other):
