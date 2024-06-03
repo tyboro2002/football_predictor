@@ -1,4 +1,4 @@
-from settings import WIN_POINTS, DRAW_POINTS, LOSE_POINTS
+from settings import WIN_POINTS, DRAW_POINTS, LOSE_POINTS, DECAY_RATE, YEARS_BACK
 from models.game import FootballGame
 from models.team import Team
 from copy import deepcopy
@@ -13,9 +13,34 @@ class League:
         if len(teams) % 2 != 0:
             raise ValueError("The number of teams must be even.")
 
-        def calculate_position_factor(l):
-            l = [len(teams) / 2 if val == "DNP" else val for val in l]
-            return np.mean(l)
+        def calculate_position_factor(l, decay_rate=DECAY_RATE):
+            """
+            Calculate the position factor, applying a decay rate to older years.
+
+            Parameters:
+            - l: List of positions or "DNP".
+            - decay_rate: The rate at which older years are reduced. A value between 0 and 1.
+
+            Returns:
+            - The weighted mean of the positions.
+            """
+            # print(len(l))
+            l = l[:YEARS_BACK]
+            print(l)
+            num_teams = len(teams)
+
+            # Apply the decay rate to each position
+            weighted_positions = []
+            for i, val in enumerate(l):
+                if val == "DNP":
+                    val = num_teams / 2
+                weight = decay_rate ** i  # Older years have a smaller weight
+                weighted_positions.append(val * weight)
+
+            total_weight = sum(decay_rate ** i for i in range(len(l)))
+            factor = np.sum(weighted_positions) / total_weight
+            print(factor)
+            return factor
 
         self.teams = [Team(team[0]) for team in teams]
         self.standings = {
