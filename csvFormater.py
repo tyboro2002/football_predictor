@@ -4,7 +4,7 @@ inp_file = "input_data/inp.csv"
 def askUser():
     # Writing to file
     with open(inp_file, "w") as file:
-        writeLast("home_team, away_team, home_score, away_score, ball_possession_home_team, home_shots_on_target, away_shots_on_target, home_shots_wide_of_target, away_shots_wide_of_target, home_corners, away_corners, home_free_kicks, away_free_kicks, home_offside, away_offside, home_fouls, away_fouls, home_yellow_card, away_yellow_cards, home_red_cards, away_red_cards, home_penalty, away_penalty, home_penalty_missed, away_penalty_missed, home_goal_denied, away_goal_denied, home_substitute, away_substitute, home_own_goal, away_own_goal, first_half_extra_time, second_half_extra_time", file)
+        write("home_team, away_team, home_score, away_score, ball_possession_home_team, home_shots_on_target, away_shots_on_target, home_shots_wide_of_target, away_shots_wide_of_target, home_corners, away_corners, home_free_kicks, away_free_kicks, home_offside, away_offside, home_fouls, away_fouls, home_yellow_card, away_yellow_cards, home_red_cards, away_red_cards, home_penalty, away_penalty, home_penalty_missed, away_penalty_missed, home_goal_denied, away_goal_denied, home_substitute, away_substitute, home_own_goal, away_own_goal, first_half_extra_time, second_half_extra_time", file, end="\n")
         while True:
             # Writing data to a file
             ask("home_team", file)  # home_team
@@ -44,74 +44,87 @@ def askUser():
             first_half_over = False
 
             while True:
+                print("home_yellow", home_yellow_card)
                 code = input("Enter code (or 'END' to finish): ").strip().upper()
-                if code == "END":
+                try:
+                    num_retract = int(''.join(filter(str.isdigit, code)))
+                except ValueError:
+                    num_retract = 1
+                print(num_retract)
+                if "END" in code:
                     break
-                elif code == "HY":
-                    home_yellow_card += 1
-                elif code == "AY":
-                    away_yellow_cards += 1
-                elif code == "HR":
-                    home_red_cards += 1
-                elif code == "AR":
-                    away_red_cards += 1
-                elif code == "HP":
-                    home_penalty += 1
-                elif code == "AP":
-                    away_penalty += 1
-                elif code == "HM":
-                    home_penalty_missed += 1
-                elif code == "AM":
-                    away_penalty_missed += 1
-                elif code == "HD":
-                    home_goal_denied += 1
-                elif code == "AD":
-                    away_goal_denied += 1
-                elif code == "HW":
-                    home_substitute += 1
-                elif code == "AW":
-                    away_substitute += 1
-                elif code == "HO":
-                    home_own_goal += 1
-                elif code == "AO":
-                    away_own_goal += 1
 
-                elif code == "RHY":
-                    home_yellow_card -= 1
-                elif code == "RAY":
-                    away_yellow_cards -= 1
-                elif code == "RHR":
-                    home_red_cards -= 1
-                elif code == "RAR":
-                    away_red_cards -= 1
-                elif code == "RHP":
-                    home_penalty -= 1
-                elif code == "RAP":
-                    away_penalty -= 1
-                elif code == "RHM":
-                    home_penalty_missed -= 1
-                elif code == "RAM":
-                    away_penalty_missed -= 1
-                elif code == "RHD":
-                    home_goal_denied -= 1
-                elif code == "RAD":
-                    away_goal_denied -= 1
-                elif code == "RHW":
-                    home_substitute -= 1
-                elif code == "RAW":
-                    away_substitute -= 1
-                elif code == "RHO":
-                    home_own_goal -= 1
-                elif code == "RAO":
-                    away_own_goal -= 1
+                elif "RHY" in code and home_yellow_card >= num_retract:
+                    home_yellow_card -= num_retract
+                elif "RAY" in code and away_yellow_cards >= num_retract:
+                    away_yellow_cards -= num_retract
+                elif "RHR" in code and home_red_cards >= num_retract:
+                    home_red_cards -= num_retract
+                elif "RAR" in code and away_red_cards >= num_retract:
+                    away_red_cards -= num_retract
+                elif "RHP" in code and home_penalty >= num_retract:
+                    home_penalty -= num_retract
+                elif "RAP" in code and away_penalty >= num_retract:
+                    away_penalty -= num_retract
+                elif "RHM" in code and home_penalty_missed >= num_retract:
+                    home_penalty_missed -= num_retract
+                elif "RAM" in code and away_penalty_missed >= num_retract:
+                    away_penalty_missed -= num_retract
+                elif "RHD" in code and home_goal_denied >= num_retract:
+                    home_goal_denied -= num_retract
+                elif "RAD" in code and away_goal_denied >= num_retract:
+                    away_goal_denied -= num_retract
+                elif "RHW" in code and home_substitute >= num_retract:
+                    home_substitute -= num_retract
+                elif "RAW" in code and away_substitute >= num_retract:
+                    away_substitute -= num_retract
+                elif "RHO" in code and home_own_goal >= num_retract:
+                    home_own_goal -= num_retract
+                elif "RAO" in code and away_own_goal >= num_retract:
+                    away_own_goal -= num_retract
+                elif "RFH" in code and first_half_over:
+                    first_half_over = False
+                    second_half_extra = 0
+
+                elif "HY" in code and "R" not in code:
+                    home_yellow_card += num_retract
+                elif "AY" in code and "R" not in code:
+                    away_yellow_cards += num_retract
+                elif "HR" in code and "R" not in code:
+                    home_red_cards += num_retract
+                elif "AR" in code and "R" not in code:
+                    away_red_cards += num_retract
+                elif "HP" in code and "R" not in code:
+                    home_penalty += num_retract
+                elif "AP" in code and "R" not in code:
+                    away_penalty += num_retract
+                elif "HM" in code and "R" not in code:
+                    home_penalty_missed += num_retract
+                elif "AM" in code and "R" not in code:
+                    away_penalty_missed += num_retract
+                elif "HD" in code and "R" not in code:
+                    home_goal_denied += num_retract
+                elif "AD" in code and "R" not in code:
+                    away_goal_denied += num_retract
+                elif "HW" in code and "R" not in code:
+                    home_substitute += num_retract
+                elif "AW" in code and "R" not in code:
+                    away_substitute += num_retract
+                elif "HO" in code and "R" not in code:
+                    home_own_goal += num_retract
+                elif "AO" in code and "R" not in code:
+                    away_own_goal += num_retract
                 else:
-                    if not first_half_over:
-                        first_half_extra = code
-                        first_half_over = True
-                        print("first_half_extra", first_half_extra)
-                    else:
-                        second_half_extra = code
-                        print("second_half_extra", second_half_extra)
+                    try:
+                        if not first_half_over:
+                            first_half_extra = int(code)
+                            first_half_over = True
+                            print("first_half_extra", first_half_extra)
+                        else:
+                            second_half_extra = int(code)
+                            print("second_half_extra", second_half_extra)
+                    except ValueError:
+                        print(f"Invalid: {code}")
 
             write(home_yellow_card, file)  # home_yellow_card
             write(away_yellow_cards, file)  # away_yellow_cards
@@ -128,25 +141,24 @@ def askUser():
             write(home_own_goal, file)  # home_own_goal
             write(away_own_goal, file)  # away_own_goal
             write(first_half_extra, file)  # first_half_extra
-            writeLast(second_half_extra, file)  # second_half_extra
+            write(second_half_extra, file, end="\n")  # second_half_extra
 
 
-def ask(text, file):
-    data = input(text)
-    file.write(str(data) + ", ")
+def ask(text, file, end=", "):
+    while True:
+        try:
+            data = int(input(text))
+            if data <= 0:
+                raise ValueError("Input must be a positive integer.")
+            file.write(str(data) + end)
+            break  # Break the loop if input is valid
+        except ValueError as e:
+            print(e)  # Print error message
+            continue  # Continue the loop to prompt for input again
 
 
-def askLast(text, file):
-    data = input(text)
-    file.write(str(data) + "\n")
-
-
-def write(text, file):
-    file.write(str(text) + ", ")
-
-
-def writeLast(text, file):
-    file.write(str(text) + "\n")
+def write(text, file, end=", "):
+    file.write(str(text) + end)
 
 
 askUser()

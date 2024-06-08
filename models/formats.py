@@ -25,21 +25,19 @@ class League:
             - The weighted mean of the positions.
             """
             # print(len(l))
-            l = l[:YEARS_BACK]
-            print(l)
+            inp = l[:YEARS_BACK]
             num_teams = len(teams)
 
             # Apply the decay rate to each position
             weighted_positions = []
-            for i, val in enumerate(l):
+            for i, val in enumerate(inp):
                 if val == "DNP":
                     val = num_teams / 2
                 weight = decay_rate ** i  # Older years have a smaller weight
                 weighted_positions.append(val * weight)
 
-            total_weight = sum(decay_rate ** i for i in range(len(l)))
+            total_weight = sum(decay_rate ** i for i in range(len(inp)))
             factor = np.sum(weighted_positions) / total_weight
-            print(factor)
             return factor
 
         self.teams = [Team(team[0]) for team in teams]

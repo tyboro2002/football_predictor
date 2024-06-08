@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+from parser import create_df_from_matchList
 
 
 def visualize_position_chances(data, save_location, League):
@@ -166,7 +167,113 @@ def visualize_team_matches(league, team_name, save_location):
                 data.append([home_team, result, away_team])
     visualize_match_list(data, save_location)
 
+
 def visualize_all_team_matches(league, save_location):
     team_names = [team.name for team in league.teams]
     for team in team_names:
         visualize_team_matches(league, team, save_location(team))
+
+
+def sort_and_divide_df(df, metric):
+    # Sort the DataFrame by total_goals_scored
+    agg_df_sorted = df.sort_values(by=metric, ascending=False)
+
+    # Select only the 'team' and 'total_goals_scored' columns
+    agg_df_sorted = agg_df_sorted[['team', metric]]
+    return agg_df_sorted
+
+
+def sort_teams_on_metrics(match_data, get_metric_sort_location):
+    df = create_df_from_matchList(match_data)
+    agg_df = df.groupby('team').agg({
+        'goals_scored': "sum",
+        'goals_conceded': "sum",
+        'possession': "mean",
+        'possession_conceded': "mean",
+        'shots_on_target': "sum",
+        'shots_on_target_conceded': "sum",
+        'shots_wide_of_target': "sum",
+        'shots_wide_of_target_conceded': "sum",
+        'corners': "sum",
+        'corners_conceded': "sum",
+        'free_kicks': "sum",
+        'free_kicks_conceded': "sum",
+        'offside': "sum",
+        'offside_conceded': "sum",
+        'fouls': "sum",
+        'fouls_conceded': "sum",
+        'yellow_cards': "sum",
+        'yellow_cards_opponent': "sum",
+        'red_cards': "sum",
+        'red_cards_opponent': "sum",
+        'penalty': "sum",
+        'penalty_conceded': "sum",
+        'penalty_missed': "sum",
+        'penalty_stopped': "sum",
+        'goal_denied': "sum",
+        'goal_denied_opponent': "sum",
+        'substitute': "sum",
+        'substitute_opponent': "sum",
+        'own_goal_opponent': "sum",
+        'own_goal_self': "sum",
+        'first_half_extra': ['mean', 'sum'],
+        'second_half_extra': ['mean', 'sum'],
+        'play_time': ['mean', 'sum']
+    }).reset_index()
+    agg_df.columns = [
+        'team',
+        'total_goals_scored',
+        'total_goals_conceded',
+        'mean_possession',
+        'mean_possession_conceded',
+        'total_shots_on_target',
+        'total_shots_on_target_conceded',
+        'total_shots_wide_of_target',
+        'total_shots_wide_of_target_conceded',
+        'total_corners',
+        'total_corners_conceded',
+        'total_free_kicks',
+        'total_free_kicks_conceded',
+        'total_offside',
+        'total_offside_conceded',
+        'total_fouls',
+        'total_fouls_conceded',
+        'total_yellow_cards',
+        'total_yellow_cards_opponent',
+        'total_red_cards',
+        'total_red_cards_opponent',
+        'total_penalty',
+        'total_penalty_conceded',
+        'total_penalty_missed',
+        'total_penalty_stopped',
+        'total_goal_denied',
+        'total_goal_denied_opponent',
+        'total_substitute',
+        'total_substitute_opponent',
+        'total_own_goal_opponent',
+        'total_own_goal_self',
+        'mean_first_half_extra',
+        'total_first_half_extra',
+        'mean_second_half_extra',
+        'total_second_half_extra',
+        'mean_play_time',
+        'total_play_time',
+    ]
+
+    # print(agg_df)
+    # print(agg_df.columns.to_list())
+    for metric in ['total_goals_scored', 'total_goals_conceded', 'mean_possession', 'mean_possession_conceded',
+                   'total_shots_on_target', 'total_shots_on_target_conceded', 'total_shots_wide_of_target',
+                   'total_shots_wide_of_target_conceded', 'total_corners', 'total_corners_conceded', 'total_free_kicks',
+                   'total_free_kicks_conceded', 'total_offside', 'total_offside_conceded', 'total_fouls',
+                   'total_fouls_conceded', 'total_yellow_cards', 'total_yellow_cards_opponent', 'total_red_cards',
+                   'total_red_cards_opponent', 'total_penalty', 'total_penalty_conceded', 'total_penalty_missed',
+                   'total_penalty_stopped', 'total_goal_denied', 'total_goal_denied_opponent', 'total_substitute',
+                   'total_substitute_opponent', 'total_own_goal_opponent', 'total_own_goal_self',
+                   'mean_first_half_extra', 'total_first_half_extra', 'mean_second_half_extra',
+                   'total_second_half_extra', 'mean_play_time', 'total_play_time']:
+        with open(get_metric_sort_location(metric), 'w') as file:
+            result_df = sort_and_divide_df(agg_df, metric)
+
+            # Write the DataFrame to a CSV file
+            result_df.to_csv(file, index=False, lineterminator="\n")
