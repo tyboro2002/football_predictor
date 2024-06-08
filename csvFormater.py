@@ -44,13 +44,11 @@ def askUser():
             first_half_over = False
 
             while True:
-                print("home_yellow", home_yellow_card)
                 code = input("Enter code (or 'END' to finish): ").strip().upper()
                 try:
                     num_retract = int(''.join(filter(str.isdigit, code)))
                 except ValueError:
                     num_retract = 1
-                print(num_retract)
                 if "END" in code:
                     break
 
@@ -90,9 +88,9 @@ def askUser():
                     home_yellow_card += num_retract
                 elif "AY" in code and "R" not in code:
                     away_yellow_cards += num_retract
-                elif "HR" in code and "R" not in code:
+                elif "HR" in code and "RHR" not in code:
                     home_red_cards += num_retract
-                elif "AR" in code and "R" not in code:
+                elif "AR" in code and "RAR" not in code:
                     away_red_cards += num_retract
                 elif "HP" in code and "R" not in code:
                     home_penalty += num_retract
@@ -148,7 +146,7 @@ def ask(text, file, end=", "):
     while True:
         try:
             data = int(input(text))
-            if data <= 0:
+            if data < 0:
                 raise ValueError("Input must be a positive integer.")
             file.write(str(data) + end)
             break  # Break the loop if input is valid
