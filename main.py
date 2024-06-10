@@ -37,6 +37,16 @@ def get_metric_sort_location(metric):
 # 1974/75 - 20
 # 1973/74 - 16
 
+def generate_season_string(start_year, num_seasons):
+    seasons = []
+    for i in range(num_seasons):
+        current_year = start_year - i
+        next_year = current_year + 1
+        season = f"{str(current_year)}/{str(next_year)[-2:]}"
+        seasons.append(season)
+    return ", ".join(seasons)
+
+# 1B, 3K
 JPL = League(
     [
         ("Club brugge", (
@@ -115,6 +125,10 @@ JPL = League(
 
 
 if __name__ == '__main__':
+    # start_year = 2023
+    # num_seasons = 60
+    # season_string = generate_season_string(start_year, num_seasons)
+    # print(season_string)
     match_data = parse_match_list(match_list_location)
     print(len(match_data))
     assert check_match_list(match_data)
