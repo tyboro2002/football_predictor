@@ -35,6 +35,7 @@ def create_df_from_matchList(matches: List[FootballGame]):
         # Team 1 details
         team_data.append({
             "team": match.home,
+            "opponent": match.away,
             "goals_scored": match.home_score,
             "goals_conceded": match.away_score,
             "goals_difference": match.home_score - match.away_score,
@@ -73,6 +74,7 @@ def create_df_from_matchList(matches: List[FootballGame]):
         # Team 2 details
         team_data.append({
             "team": match.away,
+            "opponent": match.home,
             "goals_scored": match.away_score,
             "goals_conceded": match.home_score,
             "goals_difference": match.away_score - match.home_score,

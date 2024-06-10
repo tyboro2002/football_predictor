@@ -4,8 +4,9 @@ from models.formats import League
 from models.game import check_match_list
 from predict import predict_league
 from simulate import simulate_league
-from visualize import sort_teams_on_metrics, visualize_position_chances, visualize_league, visualize_league_matches, visualize_all_team_matches
-from parser import parse_match_list
+from visualize import sort_teams_on_metrics, visualize_position_chances, visualize_league, visualize_league_matches, \
+    visualize_all_team_matches, sort_and_divide_df
+from parser import parse_match_list, create_df_from_matchList
 import time
 import pandas as pd
 
@@ -117,7 +118,9 @@ if __name__ == '__main__':
     match_data = parse_match_list(match_list_location)
     print(len(match_data))
     assert check_match_list(match_data)
-    sort_teams_on_metrics(match_data, get_metric_sort_location)
+    df = create_df_from_matchList(match_data)
+    print(sort_and_divide_df(df, "goals_difference", additional_columns=["opponent", "goals_scored", "goals_conceded"]))
+    sort_teams_on_metrics(df, get_metric_sort_location)
     # print(match_data)
     # print(partition_list_into_matchdays(match_data, 8))
 

@@ -174,17 +174,35 @@ def visualize_all_team_matches(league, save_location):
         visualize_team_matches(league, team, save_location(team))
 
 
-def sort_and_divide_df(df, metric):
-    # Sort the DataFrame by total_goals_scored
+def sort_and_divide_df(df, metric, additional_columns=[]):
+    """
+    Sort the DataFrame by a specified metric and keep additional columns if provided.
+
+    Parameters:
+    - df: The DataFrame to sort.
+    - metric: The column name to sort by.
+    - additional_columns: List of additional columns to include in the resulting DataFrame. Default is an empty list.
+
+    Returns:
+    - A sorted DataFrame containing the specified metric and additional columns.
+    """
+    # Ensure additional_columns is a list
+    if not isinstance(additional_columns, list):
+        raise ValueError("additional_columns should be a list")
+
+    # Determine the columns to keep
+    columns_to_keep = ['team', metric] + additional_columns
+
+    # Sort the DataFrame by the specified metric
     agg_df_sorted = df.sort_values(by=metric, ascending=False)
 
-    # Select only the 'team' and 'total_goals_scored' columns
-    agg_df_sorted = agg_df_sorted[['team', metric]]
+    # Select the specified columns
+    agg_df_sorted = agg_df_sorted[columns_to_keep]
+
     return agg_df_sorted
 
 
-def sort_teams_on_metrics(match_data, get_metric_sort_location):
-    df = create_df_from_matchList(match_data)
+def sort_teams_on_metrics(df, get_metric_sort_location):
     agg_df = df.groupby('team').agg({
         'goals_scored': "sum",
         'goals_conceded': "sum",
@@ -263,8 +281,6 @@ def sort_teams_on_metrics(match_data, get_metric_sort_location):
         'total_play_time',
     ]
 
-    # print(agg_df)
-    # print(agg_df.columns.to_list())
     for metric in ['total_goals_scored', 'total_goals_conceded', 'mean_goals_difference', 'total_goals_difference',
                    'mean_possession', 'mean_possession_conceded', 'total_shots_on_target',
                    'total_shots_on_target_conceded', 'total_shots_wide_of_target',
