@@ -115,6 +115,7 @@ JPL = League(
 
 if __name__ == '__main__':
     match_data = parse_match_list(match_list_location)
+    print(len(match_data))
     assert check_match_list(match_data)
     sort_teams_on_metrics(match_data, get_metric_sort_location)
     # print(match_data)

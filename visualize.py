@@ -188,6 +188,7 @@ def sort_teams_on_metrics(match_data, get_metric_sort_location):
     agg_df = df.groupby('team').agg({
         'goals_scored': "sum",
         'goals_conceded': "sum",
+        'goals_difference': ['mean', 'sum'],
         'possession': "mean",
         'possession_conceded': "mean",
         'shots_on_target': "sum",
@@ -224,6 +225,8 @@ def sort_teams_on_metrics(match_data, get_metric_sort_location):
         'team',
         'total_goals_scored',
         'total_goals_conceded',
+        'mean_goals_difference',
+        'total_goals_difference',
         'mean_possession',
         'mean_possession_conceded',
         'total_shots_on_target',
@@ -262,8 +265,9 @@ def sort_teams_on_metrics(match_data, get_metric_sort_location):
 
     # print(agg_df)
     # print(agg_df.columns.to_list())
-    for metric in ['total_goals_scored', 'total_goals_conceded', 'mean_possession', 'mean_possession_conceded',
-                   'total_shots_on_target', 'total_shots_on_target_conceded', 'total_shots_wide_of_target',
+    for metric in ['total_goals_scored', 'total_goals_conceded', 'mean_goals_difference', 'total_goals_difference',
+                   'mean_possession', 'mean_possession_conceded', 'total_shots_on_target',
+                   'total_shots_on_target_conceded', 'total_shots_wide_of_target',
                    'total_shots_wide_of_target_conceded', 'total_corners', 'total_corners_conceded', 'total_free_kicks',
                    'total_free_kicks_conceded', 'total_offside', 'total_offside_conceded', 'total_fouls',
                    'total_fouls_conceded', 'total_yellow_cards', 'total_yellow_cards_opponent', 'total_red_cards',
