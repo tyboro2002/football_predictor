@@ -1,5 +1,5 @@
 from settings import WIN_POINTS, DRAW_POINTS, LOSE_POINTS, DECAY_RATE, YEARS_BACK
-from models.game import FootballGame
+from models.game import FootballGame, partition_list_into_matchdays
 from models.team import Team
 from copy import deepcopy
 import random
@@ -9,50 +9,82 @@ import numpy as np
 
 
 class League:
-    def __init__(self, teams):
+    def __init__(self, teams, prev_positions_df, matchdays=None, keep_scores=False):
         if len(teams) % 2 != 0:
             raise ValueError("The number of teams must be even.")
 
-        def calculate_position_factor(l, decay_rate=DECAY_RATE):
+        def calculate_position_factor(positions, decay_rate=DECAY_RATE):
             """
             Calculate the position factor, applying a decay rate to older years.
 
             Parameters:
-            - l: List of positions or "DNP".
+            - positions: List of positions or "DNP".
             - decay_rate: The rate at which older years are reduced. A value between 0 and 1.
 
             Returns:
             - The weighted mean of the positions.
             """
-            # print(len(l))
-            inp = l[:YEARS_BACK]
-            num_teams = len(teams)
+            # Trim positions at the first NaN
+            valid_positions = positions[:YEARS_BACK]
 
-            # Apply the decay rate to each position
-            weighted_positions = []
-            for i, val in enumerate(inp):
-                if val == "DNP":
-                    val = num_teams / 2
-                weight = decay_rate ** i  # Older years have a smaller weight
-                weighted_positions.append(val * weight)
+            # Convert 'DNP' to middle position
+            valid_positions = np.where(valid_positions == 'DNP', len(valid_positions) / 2, valid_positions)
 
-            total_weight = sum(decay_rate ** i for i in range(len(inp)))
-            factor = np.sum(weighted_positions) / total_weight
-            return factor
+            # Convert to float
+            valid_positions = valid_positions.astype(float)
 
-        self.teams = [Team(team[0]) for team in teams]
+            # Calculate decay weights
+            weights = np.array([decay_rate ** i for i in range(len(valid_positions))])[::-1]
+
+            # Calculate weighted average
+            weighted_sum = np.sum(valid_positions * weights)
+            return weighted_sum / np.sum(weights)
+
+        self.prev_positions_df = prev_positions_df
+        self.keep_scores = keep_scores
+        self.teams = [Team(team) for team in teams]
         self.standings = {
-            team[0]: {"played": 0, "won": 0, "drawn": 0, "lost": 0, "points": 0, "scored": 0, "conceded": 0}
+            team: {"played": 0, "won": 0, "drawn": 0, "lost": 0, "points": 0, "scored": 0, "conceded": 0}
             for team in teams}
-        self.matchdays = self.generate_league_match_schedule()
-        self.prev_standings = {team[0]: calculate_position_factor(team[1]) for team in teams}
+        # set the matchdays
+        if matchdays is not None:
+            if not isinstance(matchdays[0], list):
+                matchdays = partition_list_into_matchdays(matchdays, len(teams) // 2)
+            if keep_scores:
+                self.matchdays = matchdays
+                for matchday in matchdays:
+                    for match in matchday:
+                        self.record_match_result(match)
+            else:
+                new_matchdays = []
+                for matchday in matchdays:
+                    new_matchday = []
+                    for match in matchday:
+                        # Create a new match with the same home and away teams but no scores
+                        new_match = FootballGame(match.home, match.away)
+                        new_matchday.append(new_match)
+                    new_matchdays.append(new_matchday)
+                self.matchdays = new_matchdays
+        else:
+            self.matchdays = self.generate_league_match_schedule()
+
+        self.prev_standings = {row.iloc[0]: calculate_position_factor(row.iloc[1:].tolist()) for _, row in prev_positions_df.iterrows()}
 
         if self.prev_standings is not None:
             for team in self.teams:
                 team.position_prev_season = self.prev_standings[team.name]
         assert self.check_leauge(self.matchdays)
 
-    def record_match_result(self, home_team, away_team, home_goals, away_goals):
+    def record_match_result(self, *args):
+        if args[0] is not None and isinstance(args[0], FootballGame):
+            game = args[0]
+            home_team = game.home
+            away_team = game.away
+            home_goals = game.home_score
+            away_goals = game.away_score
+        else:
+            home_team, away_team, home_goals, away_goals = args
+
         home_name = home_team.name
         away_name = away_team.name
 
@@ -81,7 +113,7 @@ class League:
 
     def get_standings(self):
         return sorted(self.standings.items(),
-                      key=lambda item: (item[1]["points"], item[1]["scored"] - item[1]["conceded"], item[1]["scored"]),
+                      key=lambda item: (item[1]["points"], item[1]["won"], item[1]["scored"] - item[1]["conceded"], item[1]["scored"]),
                       reverse=True)
 
     def set_matchdays(self, matchdays):
@@ -101,7 +133,8 @@ class League:
         return df.to_string(index=False)
 
     def copy(self):
-        new_league = League([(team.name, (self.prev_standings[team.name],)) for team in self.teams])
+        new_league = League(
+            [team.name for team in self.teams], self.prev_positions_df, None, self.keep_scores)
         new_league.standings = deepcopy(self.standings)
         new_league.matchdays = deepcopy(self.matchdays)
         return new_league
@@ -121,6 +154,12 @@ class League:
             for match in matchday:
                 if match.home in already_played or match.away in already_played or match not in needed_matches or match.away not in \
                         toplay[match.home] or match.home not in toplay[match.away]:
+                    if match.home in already_played or match.away in already_played:
+                        print("Already played")
+                    if match not in needed_matches:
+                        print("already played match")
+                    if match.away not in toplay[match.home] or match.home not in toplay[match.away]:
+                        print("not toplay")
                     print("fails at:")
                     print(matchday)
                     print(needed_matches)

@@ -5,6 +5,17 @@ from models.game import FootballGame
 import pandas as pd
 
 
+def get_teams_before_class(seasons_back, division):
+    a1 = [16, 18, 18, 18, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18,
+          18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 19, 20, 16, 16, 16, 16,
+          16, 16, 16, 16, 16, 16]
+    b1 = [16 for _ in range(len(a1))]
+    if division == "1B":
+        return a1[seasons_back]
+    elif division == "3K":
+        return b1[seasons_back] + a1[seasons_back]
+
+
 def parse_match_list(save_location):
     with open(save_location, "r", encoding="utf-8") as file:
         teams = [Team(team_name.strip()) for team_name in file.readline().split(",")]
@@ -40,7 +51,7 @@ def create_df_from_matchList(matches: List[FootballGame]):
             "goals_conceded": match.away_score,
             "goals_difference": match.home_score - match.away_score,
             "possession": match.ball_possession_home_team,
-            "possession_conceded": 100-match.ball_possession_home_team,
+            "possession_conceded": 100 - match.ball_possession_home_team,
             "shots_on_target": match.home_shots_on_target,
             "shots_on_target_conceded": match.away_shots_on_target,
             "shots_wide_of_target": match.home_shots_wide_of_target,
@@ -78,7 +89,7 @@ def create_df_from_matchList(matches: List[FootballGame]):
             "goals_scored": match.away_score,
             "goals_conceded": match.home_score,
             "goals_difference": match.away_score - match.home_score,
-            "possession": 100-match.ball_possession_home_team,
+            "possession": 100 - match.ball_possession_home_team,
             "possession_conceded": match.ball_possession_home_team,
             "shots_on_target": match.away_shots_on_target,
             "shots_on_target_conceded": match.home_shots_on_target,
@@ -113,4 +124,26 @@ def create_df_from_matchList(matches: List[FootballGame]):
 
     # Create a DataFrame from the team data
     df = pd.DataFrame(team_data)
+    return df
+
+
+def replace_value(value, col_index, division):
+    # Extract the identifier (should be "1B" always in this case)
+    identifier = value.split()[1]
+    # Get the result from get_teams
+    return get_teams_before_class(col_index, division) + int(identifier)
+
+
+def parse_prev_positions(save_location):
+    df = pd.read_csv(save_location, dtype=str)
+
+    # Trim whitespace from each value in the DataFrame
+    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
+    for col in df.columns:
+        col_index = df.columns.get_loc(col)
+
+        df[col] = df[col].apply(
+            lambda x: replace_value(x, col_index - 1, "1B") if str(x).startswith("1B") else x)
+        df[col] = df[col].apply(
+            lambda x: replace_value(x, col_index - 1, "3K") if str(x).startswith("3K") else x)
     return df

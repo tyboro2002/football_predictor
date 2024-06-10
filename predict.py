@@ -42,10 +42,13 @@ def predict_league(inp_league: League, silent: bool = True):
             print("day", playday)
         playday += 1
         for match in matchday:
-            prediction = predict_game(match, silent)
+            if match.home_score is None or match.away_score is None:
+                prediction = predict_game(match, silent)
+                league.record_match_result(match.home, match.away, prediction.home_score, prediction.away_score)
+            else:
+                prediction = match
             if not silent:
                 print(match.home, "VS", match.away, "results in", prediction)
-            league.record_match_result(match.home, match.away, prediction.home_score, prediction.away_score)
     if not silent:
         print(league)
     return league
