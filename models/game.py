@@ -13,8 +13,6 @@ def check_match_list(matches):
         metrics = [
             "home_score",
             "away_score",
-            "time_elapsed",
-            "game_over",
             "ball_possession_home_team",
             "home_shots_on_target",
             "away_shots_on_target",

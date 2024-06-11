@@ -64,6 +64,7 @@ JPL = League(
     ],
     parse_prev_positions(prev_position_location),
     parse_match_list(match_list_location),
+    True
 )
 
 
@@ -92,11 +93,11 @@ if __name__ == '__main__':
 
     print(f"Multiprocessing simulation time: {end_time - start_time} seconds")
     print("data", data)
-    visualize_position_chances(data, save_location, JPL)
+    # visualize_position_chances(data, save_location, JPL)
     predicted = predict_league(JPL)
     print("predicted matches", predicted.matchdays)
     print(predicted)
-    visualize_league(predicted, save_location2)
+    # visualize_league(predicted, save_location2)
     visualize_league_matches(predicted, get_matchday_location)
     visualize_all_team_matches(predicted, get_team_location)
 

@@ -2,6 +2,48 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 from parser import create_df_from_matchList
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
+import numpy as np
+
+from models.game import FootballGame
+from models.team import Team
+from typing import List
+
+# Paths to the logos
+logos_path = "assets/logos/"
+
+# Dictionary to cache images
+image_cache = {}
+
+
+# Function to create a placeholder image
+def create_placeholder(text, size=(700, 700)):
+    img = Image.new('RGB', size, color=(255, 255, 255))
+    d = ImageDraw.Draw(img)
+    fnt = ImageFont.load_default()
+    text_bbox = d.textbbox((0, 0), text, font=fnt)
+    text_width = text_bbox[2] - text_bbox[0]
+    text_height = text_bbox[3] - text_bbox[1]
+    position = ((size[0] - text_width) // 2, (size[1] - text_height) // 2)
+    d.text(position, text, fill=(0, 0, 0), font=fnt)
+    return img
+
+
+# Function to load, resize, and process image with caching
+def get_image(team_name: str, zoom=0.1, size=(700, 700)):
+    path = logos_path + team_name.replace(" ", "_").capitalize() + ".png"
+    if (team_name,size) in image_cache:
+        image = image_cache[(team_name,size)]
+    else:
+        try:
+            image = Image.open(path)
+            image = image.resize(size)
+        except FileNotFoundError:
+            image = create_placeholder("N/A", size=size)
+        image_cache[(team_name,size)] = image
+    return OffsetImage(image, zoom=zoom)
 
 
 def visualize_position_chances(data, save_location, League):
@@ -150,7 +192,8 @@ def visualize_matchday_results(matchday_results, save_location):
 
 def visualize_league_matches(league, save_location):
     for i in range(len(league.matchdays)):
-        visualize_matchday_results(league.matchdays[i], save_location(i + 1))
+        create_match_day_visual(league.matchdays[i], i + 1, save_location(i + 1))
+        # visualize_matchday_results(league.matchdays[i], save_location(i + 1))
 
 
 def visualize_team_matches(league, team_name, save_location):
@@ -159,13 +202,10 @@ def visualize_team_matches(league, team_name, save_location):
     for matchday in league.matchdays:
         for match in matchday:
             if match.home.name == team_name or match.away.name == team_name:
-                home_team = match.home
-                away_team = match.away
-                home_score = match.home_score
-                away_score = match.away_score
-                result = f"{home_score}-{away_score}"
-                data.append([home_team, result, away_team])
-    visualize_match_list(data, save_location)
+                data.append(match)
+    create_match_list_visual(data, team_name, save_location)
+
+    # visualize_match_list(data, save_location)
 
 
 def visualize_all_team_matches(league, save_location):
@@ -297,3 +337,94 @@ def sort_teams_on_metrics(df, get_metric_sort_location):
 
             # Write the DataFrame to a CSV file
             result_df.to_csv(file, index=False, lineterminator="\n")
+
+
+# Function to create match list visual
+def create_match_list_visual(matches: List[FootballGame], title, save_location, fontSizeName=14, fontSizeScore=20,
+                             fontSizeTitle=24):
+    print(len(matches), title)
+    # Create a figure
+    fig, ax = plt.subplots(figsize=(10, 14))
+
+    # Set the background color
+    fig.patch.set_facecolor('black')
+
+    # Hide the axes
+    ax.axis('off')
+
+    size = (200, 200)
+
+    # Iterate through matches to add logos and text
+    for i, match in enumerate(matches):
+        home: Team = match.home
+        away: Team = match.away
+        home_score = match.home_score
+        away_score = match.away_score
+        y = 1 - (i * 1/(len(matches)+1)) - 0.05  # Adjust vertical spacing
+
+        # Home team
+        home_logo = get_image(home.name, size=size)
+        ab = AnnotationBbox(home_logo, (0.3, y), frameon=False)
+        ax.add_artist(ab)
+        ax.text(0.05, y, home.name, color='white', fontsize=fontSizeName, verticalalignment='center')
+
+        # Away team
+        away_logo = get_image(away.name, size=size)
+        ab = AnnotationBbox(away_logo, (0.7, y), frameon=False)
+        ax.add_artist(ab)
+        ax.text(0.85, y, away.name, color='white', fontsize=fontSizeName, verticalalignment='center')
+
+        ax.text(0.45, y, home_score, color='white', fontsize=fontSizeScore, verticalalignment='center')
+        ax.text(0.50, y, "-", color='white', fontsize=fontSizeScore, verticalalignment='center')
+        ax.text(0.55, y, away_score, color='white', fontsize=fontSizeScore, verticalalignment='center')
+
+    # Title
+    ax.text(0.5, 1.05, title, color='yellow', fontsize=fontSizeTitle, ha='center', va='center')
+
+    # Save the figure
+    plt.savefig(save_location, bbox_inches='tight')
+    plt.close(fig)
+
+
+# Function to create match day visual
+def create_match_day_visual(matches: List[FootballGame], matchday, save_location, fontSizeName=14, fontSizeScore=20,
+                            fontSizeTitle=24):
+    # Create a figure
+    fig, ax = plt.subplots(figsize=(10, 14))
+
+    # Set the background color
+    fig.patch.set_facecolor('black')
+
+    # Hide the axes
+    ax.axis('off')
+
+    # Iterate through matches to add logos and text
+    for i, match in enumerate(matches):
+        home: Team = match.home
+        away: Team = match.away
+        home_score = match.home_score
+        away_score = match.away_score
+        y = 1 - (i * 0.125) - 0.05  # Adjust vertical spacing
+
+        # Home team
+        home_logo = get_image(home.name)
+        ab = AnnotationBbox(home_logo, (0.3, y), frameon=False)
+        ax.add_artist(ab)
+        ax.text(0.05, y, home.name, color='white', fontsize=fontSizeName, verticalalignment='center')
+
+        # Away team
+        away_logo = get_image(away.name)
+        ab = AnnotationBbox(away_logo, (0.7, y), frameon=False)
+        ax.add_artist(ab)
+        ax.text(0.85, y, away.name, color='white', fontsize=fontSizeName, verticalalignment='center')
+
+        ax.text(0.45, y, home_score, color='white', fontsize=fontSizeScore, verticalalignment='center')
+        ax.text(0.50, y, "-", color='white', fontsize=fontSizeScore, verticalalignment='center')
+        ax.text(0.55, y, away_score, color='white', fontsize=fontSizeScore, verticalalignment='center')
+
+    # Title
+    ax.text(0.5, 1.05, f'MATCH DAY {matchday}', color='yellow', fontsize=fontSizeTitle, ha='center', va='center')
+
+    # Save the figure
+    plt.savefig(save_location, bbox_inches='tight')
+    plt.close(fig)
