@@ -5,9 +5,15 @@ from parser import parse_match_list
 from settings import match_list_location
 import pandas as pd
 import numpy as np
+import random
 import joblib  # For saving and loading models
 
-retrain_model = True
+retrain_model = False
+
+# Define a noise level
+noise_level = 5  # Adjust this value as needed
+
+silent = True
 
 codes = {"Dender": 0, "Union": 1, "Anderlecht": 2, "Antwerpen": 3, "Club brugge": 4, "Cercle brugge": 5, "Krc genk": 6,
          "Gent": 7, "Kv mechelen": 8, "Stvv": 9, "Standard": 10, "Westerlo": 11, "Oh leuven": 12, "Charleroi": 13,
@@ -155,80 +161,104 @@ X_new = new_data.drop(['home_score', 'away_score'], axis=1)
 y_home_new = new_data['home_score']
 y_away_new = new_data['away_score']
 
-correct_ones = 0
-GD_correct = 0
-winner_correct = 0
-
 
 def silent_print(silent_inp, text):
     if not silent_inp:
         print(text)
 
 
-silent = False
-amount_of_predictions = 1
+def add_noise_to_features(X, noise_level):
+    X_noisy = X.copy()
+    for col in X_noisy.columns:
+        if col not in ['home', 'away']:  # Ensure team names columns are not modified
+            noise = np.random.uniform(-noise_level, noise_level, X_noisy[col].shape)
+            X_noisy[col] += noise
+            X_noisy[col] = X_noisy[col].clip(lower=0)  # Cap the values at 0
+    return X_noisy
 
-for j in range(amount_of_predictions):
-    home_score_prediction = model_home.predict(X_new)
-    away_score_prediction = model_away.predict(X_new)
+def predict(X_new, title , noise=False, amount_of_predictions=1):
+    correct_ones = 0
+    GD_correct = 0
+    winner_correct = 0
 
-    for i in range(len(home_score_prediction)):
-        home_team_name = list(codes.keys())[list(codes.values()).index(int(new_data['home'].iloc[i]))]
-        away_team_name = list(codes.keys())[list(codes.values()).index(int(new_data['away'].iloc[i]))]
+    print("#"*(len(title) + 6))
+    print("#  " + title + "  #")
+    print("#" * (len(title) + 6))
 
-        silent_print(silent,
-                     f"Predicted Home Score for data point {i} ({home_team_name}): {home_score_prediction[i]}"
-                     f" (Rounded down: {int(home_score_prediction[i])})")
-        silent_print(silent,
-                     f"Predicted Away Score for data point {i} ({away_team_name}): {away_score_prediction[i]}"
-                     f" (Rounded down: {int(away_score_prediction[i])})")
-
-        actual_home_score = y_home_new[i]
-        actual_away_score = y_away_new[i]
-
-        silent_print(silent, f"Actual Home Score for data point {i}: {actual_home_score}")
-        silent_print(silent, f"Actual Away Score for data point {i}: {actual_away_score}")
-
-        # Check if predicted scores match actual scores
-        if int(home_score_prediction[i]) == actual_home_score:
-            silent_print(silent, "Predicted Home Score matches actual Home Score!")
+    for j in range(amount_of_predictions):
+        if noise:
+            # Perturb input features with random noise
+            X_new_noisy = add_noise_to_features(X_new, noise_level)
         else:
-            silent_print(silent, "Predicted Home Score does not match actual Home Score!")
+            X_new_noisy = X_new.copy()
 
-        if int(away_score_prediction[i]) == actual_away_score:
-            silent_print(silent, "Predicted Away Score matches actual Away Score!")
-        else:
-            silent_print(silent, "Predicted Away Score does not match actual Away Score!")
+        home_score_prediction = model_home.predict(X_new_noisy)
+        away_score_prediction = model_away.predict(X_new_noisy)
 
-        if (int(home_score_prediction[i]) - int(away_score_prediction[i])) == (actual_home_score - actual_away_score):
-            silent_print(silent, "Predicted GD matches actual GD!")
-            GD_correct += 1
-        else:
-            silent_print(silent, "Predicted GD does not match actual GD!")
+        for i in range(len(home_score_prediction)):
+            home_team_name = list(codes.keys())[list(codes.values()).index(int(new_data['home'].iloc[i]))]
+            away_team_name = list(codes.keys())[list(codes.values()).index(int(new_data['away'].iloc[i]))]
 
-        if int(home_score_prediction[i]) == actual_home_score and int(away_score_prediction[i]) == actual_away_score:
-            silent_print(silent, "Predicted exact correct!")
-            correct_ones += 1
+            silent_print(silent,
+                         f"Predicted Home Score for data point {i} ({home_team_name}): {home_score_prediction[i]}"
+                         f" (Rounded down: {int(home_score_prediction[i])})")
+            silent_print(silent,
+                         f"Predicted Away Score for data point {i} ({away_team_name}): {away_score_prediction[i]}"
+                         f" (Rounded down: {int(away_score_prediction[i])})")
 
-        if int(home_score_prediction[i]) < int(
-                away_score_prediction[i]) and actual_home_score < actual_away_score or int(
+            actual_home_score = y_home_new[i]
+            actual_away_score = y_away_new[i]
+
+            silent_print(silent, f"Actual Home Score for data point {i}: {actual_home_score}")
+            silent_print(silent, f"Actual Away Score for data point {i}: {actual_away_score}")
+
+            # Check if predicted scores match actual scores
+            if int(home_score_prediction[i]) == actual_home_score:
+                silent_print(silent, "Predicted Home Score matches actual Home Score!")
+            else:
+                silent_print(silent, "Predicted Home Score does not match actual Home Score!")
+
+            if int(away_score_prediction[i]) == actual_away_score:
+                silent_print(silent, "Predicted Away Score matches actual Away Score!")
+            else:
+                silent_print(silent, "Predicted Away Score does not match actual Away Score!")
+
+            if (int(home_score_prediction[i]) - int(away_score_prediction[i])) == (
+                    actual_home_score - actual_away_score):
+                silent_print(silent, "Predicted GD matches actual GD!")
+                GD_correct += 1
+            else:
+                silent_print(silent, "Predicted GD does not match actual GD!")
+
+            if int(home_score_prediction[i]) == actual_home_score and int(
+                    away_score_prediction[i]) == actual_away_score:
+                silent_print(silent, "Predicted exact correct!")
+                correct_ones += 1
+
+            if int(home_score_prediction[i]) < int(
+                    away_score_prediction[i]) and actual_home_score < actual_away_score or int(
                 home_score_prediction[i]) > int(
-            away_score_prediction[i]) and actual_home_score > actual_away_score or int(
-            home_score_prediction[i]) == int(away_score_prediction[i]) and actual_home_score == actual_away_score:
-            silent_print(silent, "Predicted winner correct!")
-            winner_correct += 1
-        silent_print(silent, "\n")
+                away_score_prediction[i]) and actual_home_score > actual_away_score or int(
+                home_score_prediction[i]) == int(away_score_prediction[i]) and actual_home_score == actual_away_score:
+                silent_print(silent, "Predicted winner correct!")
+                winner_correct += 1
+            silent_print(silent, "\n")
 
-amount_of_matches = len(y_home_new) * amount_of_predictions
-print("matches", amount_of_matches)
-print("winner_correct", winner_correct)
-print("GD correct", GD_correct)
-print("exact correct", correct_ones)
+    amount_of_matches = len(y_home_new) * amount_of_predictions
+    print("matches", amount_of_matches)
+    print("winner_correct", winner_correct)
+    print("GD correct", GD_correct)
+    print("exact correct", correct_ones)
 
-percentage_winner_correct = (winner_correct / amount_of_matches) * 100
-percentage_GD_correct = (GD_correct / amount_of_matches) * 100
-percentage_exact_correct = (correct_ones / amount_of_matches) * 100
+    percentage_winner_correct = (winner_correct / amount_of_matches) * 100
+    percentage_GD_correct = (GD_correct / amount_of_matches) * 100
+    percentage_exact_correct = (correct_ones / amount_of_matches) * 100
 
-print("Percentage of winner predictions correct:", percentage_winner_correct)
-print("Percentage of GD predictions correct:", percentage_GD_correct)
-print("Percentage of exact predictions correct:", percentage_exact_correct)
+    print("Percentage of winner predictions correct:", percentage_winner_correct)
+    print("Percentage of GD predictions correct:", percentage_GD_correct)
+    print("Percentage of exact predictions correct:", percentage_exact_correct)
+    print("\n\n")
+
+
+predict(X_new, "normal", amount_of_predictions=1)
+predict(X_new, "noisy", True, amount_of_predictions=10)

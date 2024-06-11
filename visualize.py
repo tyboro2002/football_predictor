@@ -342,7 +342,6 @@ def sort_teams_on_metrics(df, get_metric_sort_location):
 # Function to create match list visual
 def create_match_list_visual(matches: List[FootballGame], title, save_location, fontSizeName=14, fontSizeScore=20,
                              fontSizeTitle=24):
-    print(len(matches), title)
     # Create a figure
     fig, ax = plt.subplots(figsize=(10, 14))
 
