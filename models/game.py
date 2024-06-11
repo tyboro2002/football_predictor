@@ -62,8 +62,8 @@ class FootballGame:
         self.away = away
         self.home_score = None
         self.away_score = None
-        self.time_elapsed = 0  # in minutes
-        self.game_over = False
+        # self.time_elapsed = 0  # in minutes
+        # self.game_over = False
         self.ball_possession_home_team = 0
         self.home_shots_on_target = 0
         self.away_shots_on_target = 0
