@@ -34,21 +34,21 @@ def create_placeholder(text, size=(700, 700)):
 # Function to load, resize, and process image with caching
 def get_image(team_name: str, zoom=0.1, size=(700, 700)):
     path = logos_path + team_name.replace(" ", "_").capitalize() + ".png"
-    if (team_name,size) in image_cache:
-        image = image_cache[(team_name,size)]
+    if (team_name, size) in image_cache:
+        image = image_cache[(team_name, size)]
     else:
         try:
             image = Image.open(path)
             image = image.resize(size)
         except FileNotFoundError:
             image = create_placeholder("N/A", size=size)
-        image_cache[(team_name,size)] = image
+        image_cache[(team_name, size)] = image
     return OffsetImage(image, zoom=zoom)
 
 
-def visualize_position_chances(data, save_location, League):
+def visualize_position_chances(data, save_location, league):
     # Convert the data to a DataFrame
-    df = pd.DataFrame(data, index=[f'Position {i + 1}' for i in range(len(League.teams))])
+    df = pd.DataFrame(data, index=[f'Position {i + 1}' for i in range(len(league.teams))])
 
     # Create a heatmap
     plt.figure(figsize=(12, 8))
@@ -59,6 +59,12 @@ def visualize_position_chances(data, save_location, League):
 
     # Save the figure
     plt.savefig(save_location)
+
+
+def visualize_group_standings_chanches(data, get_group_location, group_stage):
+    for i in range(len(data)):
+        group_data = data[i]
+        visualize_position_chances(group_data, get_group_location(i), group_stage.leagues[i])
 
 
 def calculate_team_form(team, last_matchdays_results):
@@ -359,7 +365,7 @@ def create_match_list_visual(matches: List[FootballGame], title, save_location, 
         away: Team = match.away
         home_score = match.home_score
         away_score = match.away_score
-        y = 1 - (i * 1/(len(matches)+1)) - 0.05  # Adjust vertical spacing
+        y = 1 - (i * 1 / (len(matches) + 1)) - 0.05  # Adjust vertical spacing
 
         # Home team
         home_logo = get_image(home.name, size=size)

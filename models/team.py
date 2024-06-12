@@ -1,5 +1,5 @@
 class Team:
-    def __init__(self, name):
+    def __init__(self, name: str):
         self.name = name
         self.position_prev_season = 0  # The position this team was at in the previous season 0 if it did not play
         self.previous_matches = []

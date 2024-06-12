@@ -1,0 +1,68 @@
+Dender, Union, Anderlecht, Antwerpen, Club brugge, Cercle brugge, Krc genk, Gent, Kv mechelen, Stvv, Standard, Westerlo ,Oh leuven, Charleroi, Kas eupen, Kv korterijk, Rwdm, Germany, Scotland, Hungary,Switserland,Spain, Croatia, Italy, Albania,Slovakia, Denmark, Serbia, England,Poland, Netherlands, Austria, France,Belgium, Slovakia,Romania,Ukrain,Turkey, Georgia,Portugal,Tsjechie
+home_team, away_team
+
+# group A
+# matchday 1
+17,18
+19,20
+# matchday 2
+17,19
+18,20
+# matchday 3
+18,19
+20,17
+
+# group B
+# matchday 1
+21,22
+23,24
+# matchday 2
+22,24
+21,23
+# matchday 3
+24,21
+22,23
+
+# group C
+# matchday 1
+25,26
+27,28
+# matchday 2
+25,27
+26,28
+# matchday 3
+26,27
+28,25
+
+# group D
+# matchday 1
+29,30
+31,32
+# matchday 2
+29,31
+30,32
+# matchday 3
+30,31
+32,29
+
+# group E
+# matchday 1
+35,36
+33,34
+# matchday 2
+34,36
+33,35
+# matchday 3
+36,33
+34,35
+
+# group F
+# matchday 1
+37,38
+39,40
+# matchday 2
+37,39
+38,40
+# matchday 3
+38,39
+40,37

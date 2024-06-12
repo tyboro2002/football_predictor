@@ -1,7 +1,8 @@
-from predict import predict_game, predict_league
+from predict import predict_game, predict_league, predict_knockout
 from models.game import FootballGame
-from models.formats import League
+from models.formats import League, GroupStage, KnockoutStage
 import multiprocessing
+from math import log2, ceil
 
 
 def simulate_game(game: FootballGame, n):
@@ -30,7 +31,7 @@ def simulate_once(league):
 
 def worker_simulation(league, n):
     num_teams = len(league.teams)
-    position_counts = {team.name: [0] * num_teams for team in league.teams}
+    position_counts = {team: [0] * num_teams for team in league.teams}
 
     for _ in range(n):
         standings = simulate_once(league)
@@ -70,3 +71,30 @@ def simulate_league(league: League, n: int, num_workers: int = None):
         combined_counts[team] = [count / n for count in combined_counts[team]]
 
     return combined_counts
+
+
+def simulate_group_stage(groups: GroupStage, n: int, num_workers: int = None):
+    outp_positions = []
+    for league in groups.leagues:
+        simulated_positions = simulate_league(league, n, num_workers)
+        outp_positions.append(simulated_positions)
+    return outp_positions
+
+
+def simulate_knockout_stage(knockout: KnockoutStage, n: int):
+    num_teams = len(knockout.teams)
+    num_rounds = ceil(log2(num_teams))
+    advancement_counts = {team: [0] * (num_rounds + 1) for team in knockout.teams}
+
+    for _ in range(n):
+        knockout_stage = knockout.copy()
+        results = predict_knockout(knockout_stage)
+
+        rounds = results.rounds
+        for team in results.teams:
+            advancement_counts[team][0] += 1
+        for i in range(len(rounds)):
+            print(f"{rounds[i] = }")
+            for match in rounds[i]:
+                advancement_counts[match.winner][i+1] += 1
+    return advancement_counts
