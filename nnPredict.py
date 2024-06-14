@@ -8,16 +8,26 @@ import numpy as np
 import random
 import joblib  # For saving and loading models
 
-retrain_model = False
+retrain_model = True
 
 # Define a noise level
 noise_level = 5  # Adjust this value as needed
+
+estimators = 10_000
+
+amount_of_non_noisy_predictions = 5
+amount_of_noisy_predictions = 30
 
 silent = True
 
 codes = {"Dender": 0, "Union": 1, "Anderlecht": 2, "Antwerpen": 3, "Club brugge": 4, "Cercle brugge": 5, "Krc genk": 6,
          "Gent": 7, "Kv mechelen": 8, "Stvv": 9, "Standard": 10, "Westerlo": 11, "Oh leuven": 12, "Charleroi": 13,
-         "Kas eupen": 14, "Kv korterijk": 15, "Rwdm": 16, "Belgium": 17, "Croatia": 18, "Morocco": 19, "Canada": 20}
+         "Kas eupen": 14, "Kv korterijk": 15, "Rwdm": 16,
+         "Germany": 17, "Scotland": 18, "Hungary": 19, "Switserland": 20, "Spain": 21, "Croatia": 22, "Italy": 23,
+         "Albania": 24, "Slovenia": 25, "Denmark": 26, "Serbia": 27, "England": 28, "Poland": 29, "Netherlands": 30,
+         "Austria": 31, "France": 32, "Belgium": 33, "Slovakia": 34, "Romania": 35, "Ukrain": 36, "Turkey": 37,
+         "Georgia": 38, "Portugal": 39, "Tsjechie": 40, "Canada": 41, "Maroco": 42
+         }
 
 
 # Function to calculate recent form
@@ -53,7 +63,16 @@ def calculate_recent_form(df, team_col, home_score_col, away_score_col, window=5
     return form_scores
 
 
-def add_new_colls(df):
+def add_new_colls(df, rename_teams=False):
+    if rename_teams:
+        # Convert team columns to string representations
+        df['home'] = df['home'].apply(str)
+        df['away'] = df['away'].apply(str)
+
+        # Replace numerical team values with their string representations
+        df['home'] = df['home'].map(codes)
+        df['away'] = df['away'].map(codes)
+
     df['home_recent_form'] = calculate_recent_form(df, 'home', 'home_score', 'away_score')
     df['away_recent_form'] = calculate_recent_form(df, 'away', 'away_score', 'home_score')
     # df['home_avg_goals_scored'] = df.groupby('home')['home_score'].transform(
@@ -66,7 +85,10 @@ def add_new_colls(df):
     #     lambda x: x.rolling(window=5, min_periods=1).mean())
 
     # Goal Difference
-    # df['goal_difference'] = df['home_avg_goals_scored'] - df['away_avg_goals_conceded']
+    df['goal_difference'] = (df.groupby('home')['home_score'].transform(
+             lambda x: x.rolling(window=5, min_periods=1).mean()) -
+                             df.groupby('home')['away_score'].transform(
+             lambda x: x.rolling(window=5, min_periods=1).mean()))
 
     # Team Strength Difference
     # df['team_strength_difference'] = df['home_avg_goals_scored'] - df['away_avg_goals_scored']
@@ -79,16 +101,32 @@ def add_new_colls(df):
     df['home_win_ratio'] = df.groupby('home')['home_recent_form'].transform(lambda x: np.mean(x == 3))
     df['away_win_ratio'] = df.groupby('away')['away_recent_form'].transform(lambda x: np.mean(x == 3))
 
-    # Difference in Win Ratios
+    # Difference in Draw Ratios
     df['win_ratio_difference'] = df['home_win_ratio'] - df['away_win_ratio']
+
+    # # Home and Away Draw Ratios
+    # df['home_draw_ratio'] = df.groupby('home')['home_recent_form'].transform(lambda x: np.mean(x == 1))
+    # df['away_draw_ratio'] = df.groupby('away')['away_recent_form'].transform(lambda x: np.mean(x == 1))
+    #
+    # # Difference in Draw Ratios
+    # df['draw_ratio_difference'] = df['home_draw_ratio'] - df['away_draw_ratio']
+    #
+    # # Home and Away Loss Ratios
+    # df['home_loss_ratio'] = df.groupby('home')['home_recent_form'].transform(lambda x: np.mean(x == 0))
+    # df['away_loss_ratio'] = df.groupby('away')['away_recent_form'].transform(lambda x: np.mean(x == 0))
+    #
+    # # Difference in Loss Ratios
+    # df['loss_ratio_difference'] = df['home_loss_ratio'] - df['away_loss_ratio']
 
     # total shots
     df['home_shots'] = df['home_shots_on_target'] + df['home_shots_wide_of_target']
     df['away_shots'] = df['away_shots_on_target'] + df['away_shots_wide_of_target']
 
     # Home and Away Shots Ratio
-    df['home_shots_ratio'] = df['home_shots'] / np.where((df['away_shots'] + df['home_shots']) == 0, 1, (df['away_shots'] + df['home_shots']))
-    df['away_shots_ratio'] = df['away_shots'] / np.where((df['away_shots'] + df['home_shots']) == 0, 1, (df['away_shots'] + df['home_shots']))
+    df['home_shots_ratio'] = df['home_shots'] / np.where((df['away_shots'] + df['home_shots']) == 0, 1,
+                                                         (df['away_shots'] + df['home_shots']))
+    df['away_shots_ratio'] = df['away_shots'] / np.where((df['away_shots'] + df['home_shots']) == 0, 1,
+                                                         (df['away_shots'] + df['home_shots']))
 
     # Home and Away Shots on Target Ratios
     df['home_shots_on_target_ratio'] = df['home_shots_on_target'] / np.where(df['home_shots'] == 0, 1, df['home_shots'])
@@ -101,21 +139,12 @@ def add_new_colls(df):
 
 
 if retrain_model:
-    estimators = 10_000
 
     match_data = parse_match_list(match_list_location)
     print(len(match_data))
     df = pd.DataFrame([data.__dict__ for data in match_data])
 
-    # Convert team columns to string representations
-    df['home'] = df['home'].apply(str)
-    df['away'] = df['away'].apply(str)
-
-    # Replace numerical team values with their string representations
-    df['home'] = df['home'].map(codes)
-    df['away'] = df['away'].map(codes)
-
-    df = add_new_colls(df)
+    df = add_new_colls(df, rename_teams=True)
 
     # Assuming you have a DataFrame called 'data' containing your features and target variable
     X = df.drop(['home_score', 'away_score'], axis=1)
@@ -133,8 +162,8 @@ if retrain_model:
     model_away.fit(X_train, y_train_away)
 
     # Save the models
-    joblib.dump(model_home, 'model_home.pkl')
-    joblib.dump(model_away, 'model_away.pkl')
+    joblib.dump(model_home, 'nnmodels/randomForestRegressor/model_home.pkl')
+    joblib.dump(model_away, 'nnmodels/randomForestRegressor/model_away.pkl')
 
     # Evaluate the models
     y_pred_home = model_home.predict(X_test)
@@ -147,19 +176,8 @@ if retrain_model:
     print(f"Mean Squared Error (Away Score): {mse_away}")
     print("\n\n")
 
-# Load the models
-model_home = joblib.load('model_home.pkl')
-model_away = joblib.load('model_away.pkl')
-
-# Make predictions
-new_data = pd.read_csv("input_data/toPredict.csv")  # Your new data for prediction
-new_data.columns = new_data.columns.map(lambda x: x.strip() if isinstance(x, str) else x)
-
-new_data = add_new_colls(new_data)
-
-X_new = new_data.drop(['home_score', 'away_score'], axis=1)
-y_home_new = new_data['home_score']
-y_away_new = new_data['away_score']
+home_models = ['nnmodels/randomForestRegressor/model_home.pkl']
+away_models = ['nnmodels/randomForestRegressor/model_away.pkl']
 
 
 def silent_print(silent_inp, text):
@@ -170,18 +188,19 @@ def silent_print(silent_inp, text):
 def add_noise_to_features(X, noise_level):
     X_noisy = X.copy()
     for col in X_noisy.columns:
-        if col not in ['home', 'away']:  # Ensure team names columns are not modified
+        if col not in ['home', 'away', 'home_score', 'away_score']:  # Ensure team names columns are not modified
             noise = np.random.uniform(-noise_level, noise_level, X_noisy[col].shape)
             X_noisy[col] += noise
             X_noisy[col] = X_noisy[col].clip(lower=0)  # Cap the values at 0
     return X_noisy
 
-def predict(X_new, title , noise=False, amount_of_predictions=1):
+
+def predict(X_new, title, noise=False, amount_of_predictions=1):
     correct_ones = 0
     GD_correct = 0
     winner_correct = 0
 
-    print("#"*(len(title) + 6))
+    print("#" * (len(title) + 6))
     print("#  " + title + "  #")
     print("#" * (len(title) + 6))
 
@@ -260,5 +279,24 @@ def predict(X_new, title , noise=False, amount_of_predictions=1):
     print("\n\n")
 
 
-predict(X_new, "normal", amount_of_predictions=1)
-predict(X_new, "noisy", True, amount_of_predictions=10)
+for model_home_path, model_away_path in zip(home_models, away_models):
+    print("#" * (len(model_home_path) + len(model_away_path) + 23))
+    print("#  home: " + model_home_path + " and away: " + model_away_path + "  #")
+    print("#" * (len(model_home_path) + len(model_away_path) + 23))
+
+    # Load the models
+    model_home = joblib.load('nnmodels/randomForestRegressor/model_home.pkl')
+    model_away = joblib.load('nnmodels/randomForestRegressor/model_away.pkl')
+
+    # Make predictions
+    new_data = pd.read_csv("input_data/toPredict.csv")  # Your new data for prediction
+    new_data.columns = new_data.columns.map(lambda x: x.strip() if isinstance(x, str) else x)
+
+    new_data = add_new_colls(new_data)  # add the columns we make from the data
+
+    X_new = new_data.drop(['home_score', 'away_score'], axis=1)
+    y_home_new = new_data['home_score']
+    y_away_new = new_data['away_score']
+
+    predict(X_new, "normal", amount_of_predictions=amount_of_non_noisy_predictions)
+    predict(X_new, "noisy", True, amount_of_predictions=amount_of_noisy_predictions)

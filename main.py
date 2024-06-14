@@ -86,7 +86,7 @@ EK = GroupStage(
     [
         ["Germany", "Scotland", "Hungary", "Switserland"],
         ["Spain", "Croatia", "Italy", "Albania"],
-        ["Slovakia", "Denmark", "Serbia", "England"],
+        ["Slovenia", "Denmark", "Serbia", "England"],
         ["Poland", "Netherlands", "Austria", "France"],
         ["Belgium", "Slovakia", "Romania", "Ukrain"],
         ["Turkey", "Georgia", "Portugal", " Tsjechie"]

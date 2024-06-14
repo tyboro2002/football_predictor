@@ -94,7 +94,6 @@ def simulate_knockout_stage(knockout: KnockoutStage, n: int):
         for team in results.teams:
             advancement_counts[team][0] += 1
         for i in range(len(rounds)):
-            print(f"{rounds[i] = }")
             for match in rounds[i]:
                 advancement_counts[match.winner][i+1] += 1
     return advancement_counts
