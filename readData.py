@@ -2,6 +2,80 @@ import pandas as pd
 import os
 import csv
 
+# Directory containing the CSV files
+directory_path = "input_data/footbal-data-co-uk"
+output_path = "input_data/merged/merged.csv"
+
+insert_columns = [
+    ('ball_possession_home_team', 7, 0),
+    ('home_shots_wide_of_target', 12, 0),
+    ('away_shots_wide_of_target', 13, 0),
+    ('home_penalty', 31, 0),
+    ('away_penalty', 32, 0),
+    ('home_penalty_missed', 33, 0),
+    ('away_penalty_missed', 34, 0),
+    ('home_goal_denied', 35, 0),
+    ('away_goal_denied', 36, 0),
+    ('home_substitute', 37, 0),
+    ('away_substitute', 38, 0),
+    ('home_own_goal', 39, 0),
+    ('away_own_goal', 40, 0),
+    ('first_half_extra_time', 41, 0),
+    ('second_half_extra_time', 42, 0),
+]
+
+new_colum_names = [
+    'Div', 'Date', 'Time',
+    'home_team', 'away_team',
+    'home_score', 'away_score',
+    'ball_possession_home_team',
+    'home_shots', 'away_shots',
+    'home_shots_on_target', 'away_shots_on_target',
+    'home_shots_wide_of_target', 'away_shots_wide_of_target',
+    'home_shots_hit_woodwork', 'away_shots_hit_woodwork',
+    'home_corners', 'away_corners',
+    'home_fouls', 'away_fouls',
+    'home_free_kicks', 'away_free_kicks',
+    'home_offside', 'away_offside',
+    'home_yellow_card', 'away_yellow_card',
+    'home_red_cards', 'away_red_cards',
+    'home_team_bookings_points', 'away_team_bookings_points',
+    'final_time_result',
+    'home_penalty', 'away_penalty',
+    'home_penalty_missed', 'away_penalty_missed',
+    'home_goal_denied', 'away_goal_denied',
+    'home_substitute', 'away_substitute',
+    'home_own_goal', 'away_own_goal',
+    'first_half_extra_time', 'second_half_extra_time',
+    'source_file',
+]
+
+# Define the columns you want to select
+selected_columns = [
+    'Div', 'Date', 'Time',
+    'HomeTeam', 'AwayTeam',
+    'FTHG', 'FTAG',  # it's this row or
+    'HG', 'AG',  # this row
+    'HS', 'AS',
+    'HST', 'AST',
+    'HHW', 'AHW',
+    'HC', 'AC',
+    'HF', 'AF',
+    'HFKC', 'AFKC',
+    'HO', 'AO',
+    'HY', 'AY',
+    'HR', 'AR',
+    'HBP', 'ABP',
+    'FTR',  # both are the same
+    'Res',
+    'source_file'
+]
+
+column_merges = {
+    'FTR': ['FTR', 'Res'],
+    'FTHG': ['FTHG', 'HG'],
+    'FTAG': ['FTAG', 'AG'],
+}
 
 def normalize_csv_file(input_file, output_file):
     # Read the CSV file to find the maximum number of fields in any row
@@ -32,17 +106,17 @@ def normalize_all_csv_files_in_directory(directory):
                 print(f"Normalized {filename} and saved as {filename}")
 
 
-def read_and_combine_csv(directory, column_merges={}, selected_columns=[], NaN_Value=0):
+def read_and_combine_csv(directory, column_merges={}, selected_columns=[], NaN_Value=0, encoding='utf-8'):
     dataframes = []
 
     # Iterate through all files and subdirectories in the directory
     for root, _, files in os.walk(directory):
         for filename in files:
             if filename.endswith(".csv"):
-                file_path = os.path.join(directory, filename)
+                file_path = os.path.join(root, filename)
                 try:
-                    df = pd.read_csv(file_path, header=0)
-                    # df['source_file'] = file_path  # Add a column with the file path
+                    df = pd.read_csv(file_path, header=0, encoding=encoding)
+                    df['source_file'] = file_path  # Add a column with the file path
                     df.fillna(NaN_Value, inplace=True)
                     dataframes.append(df)
                 except pd.errors.ParserError as e:
@@ -55,6 +129,9 @@ def read_and_combine_csv(directory, column_merges={}, selected_columns=[], NaN_V
 
     combined_df = pd.concat(dataframes, ignore_index=True).fillna('')
 
+    # Replace all empty strings with NaN_Value (which is 0 in this case)
+    combined_df.replace('', NaN_Value, inplace=True)
+
     # Select specific columns if they exist in the DataFrame
     selected_columns = [col for col in selected_columns if col in combined_df.columns]
     combined_dataframe = combined_df[selected_columns]
@@ -63,59 +140,63 @@ def read_and_combine_csv(directory, column_merges={}, selected_columns=[], NaN_V
     for new_column, cols_to_merge in column_merges.items():
         combined_dataframe = combine_columns(combined_dataframe, cols_to_merge, new_column)
 
+    # Keep only rows where 'home_team' and 'away_team' exist
+    if 'HomeTeam' in combined_dataframe.columns and 'AwayTeam' in combined_dataframe.columns:
+        combined_dataframe = combined_dataframe[
+            (combined_dataframe['HomeTeam'] != '') & (combined_dataframe['AwayTeam'] != '') &
+            (combined_dataframe['HomeTeam'] != 0) & (combined_dataframe['AwayTeam'] != 0)
+            ]
+
+    # Replace all empty strings with NaN_Value (which is 0 in this case)
+    combined_df.replace('', NaN_Value, inplace=True)
+
+    # Attempt to convert each column to integers where possible
+    for column in combined_dataframe.columns:
+        # Check if the column can be converted to numeric without changing its data type to avoid converting text
+        combined_dataframe[column] = pd.to_numeric(combined_dataframe[column], errors='ignore')
+        try:
+            combined_dataframe[column] = combined_dataframe[column].astype(int)
+        except ValueError:
+            pass
+
     return combined_dataframe
 
 
-def combine_columns(df, column_list, new_column_name):
-    if len(column_list) < 2:
-        raise ValueError("column_list must contain at least two columns.")
-
-    # Check if columns exist in the DataFrame
+def combine_columns(df, column_list, new_column):
+    # Ensure all columns in column_list exist in the DataFrame
     existing_columns = [col for col in column_list if col in df.columns]
-    if not len(existing_columns) == len(column_list):
-        return df
-    # Create a new column with the combined data
-    df[new_column_name] = df[column_list[0]].combine_first(df[column_list[1]])  # TODO this now gives a warning fix
 
+    if existing_columns:
+        # Mask the rows of the second column where there is a value in the first column
+        if len(existing_columns) > 1:
+            df.loc[df[existing_columns[0]] != '', existing_columns[1]] = ''
+
+        # Create the new column by concatenating values from the existing columns
+        df[new_column] = df[existing_columns].astype(str).agg(''.join, axis=1)
+
+    existing_columns.remove(new_column)
     # Drop the original columns
     df.drop(columns=existing_columns, inplace=True)
+
     return df
 
 
-# Define the columns you want to select
-selected_columns = [
-    'HomeTeam', 'AwayTeam',
-    'FTHG', 'FTAG',  # it's this row or
-    # 'HG', 'AG'  # this row
-    'HS', 'AS',
-    'HST', 'AST',
-    'HHW', 'AHW',
-    'HC', 'AC',
-    'HF', 'AF',
-    'HFKC', 'AFKC',
-    'HO', 'AO',
-    'HY', 'AY',
-    'HR', 'AR',
-    'HBP', 'ABP',
-    'FTR',  # both are the same
-    # 'Res'
-    # 'source_file'
-]
-
-column_merges = {
-    # 'FTR': ['FTR', 'Res'],
-    # 'FTHG': ['FTHG', 'HG'],
-    # 'FTAG': ['FTAG', 'AG'],
-}
-
-# Directory containing the CSV files
-directory_path = "input_data/footbal-data-co-uk/"
-
 # Normalize all CSV files in the directory
-normalize_all_csv_files_in_directory(directory_path)
+# normalize_all_csv_files_in_directory(directory_path)
 
 # Read and combine all CSV files into a single DataFrame
-combined_dataframe = read_and_combine_csv(directory_path, column_merges=column_merges, selected_columns=selected_columns)
+combined_dataframe = read_and_combine_csv(
+    directory_path,
+    column_merges=column_merges,
+    selected_columns=selected_columns
+)
+
+# Insert new columns with all zeros at specific positions
+for col_name, pos, value in insert_columns:
+    combined_dataframe.insert(pos, col_name, value)
+
+
+combined_dataframe.columns = new_colum_names
 
 # pd.set_option('display.max_columns', None)   # Display all columns
 # pd.set_option('display.max_rows', None)      # Display all rows in each cell
@@ -124,7 +205,24 @@ combined_dataframe = read_and_combine_csv(directory_path, column_merges=column_m
 
 # Display the first few rows of the combined DataFrame
 print(combined_dataframe)
-print(combined_dataframe.columns)
+# print(combined_dataframe.columns)
+
+# # Get and print the types of the values in the FTR column
+# if 'FTHG' in combined_dataframe.columns:
+#     ftr_types = combined_dataframe['FTHG'].apply(type)
+#     print(ftr_types)
+# else:
+#     print("The 'FTHG' column does not exist in the DataFrame.")
 
 # Optionally, save the combined DataFrame to a new CSV file
-# combined_dataframe.to_csv("combined_data.csv", index=False)
+combined_dataframe.to_csv(output_path, index=False)
+
+# Read the CSV file into a DataFrame
+df = pd.read_csv(output_path)
+
+# Count the number of rows in the DataFrame
+num_lines = df.shape[0]
+print(df.columns)
+
+# Print the number of lines
+print(f"Number of lines in '{output_path}': {num_lines}")
