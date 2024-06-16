@@ -433,3 +433,18 @@ def create_match_day_visual(matches: List[FootballGame], matchday, save_location
     # Save the figure
     plt.savefig(save_location, bbox_inches='tight')
     plt.close(fig)
+
+
+def make_histogram(data, title: str, save_location=None, figsize=(10, 6)):
+    # Plot the distribution of the values in 'final_time_result'
+    plt.figure(figsize=figsize)
+    sns.histplot(data)
+    plt.title(f'Distribution of Values in {title}')
+    plt.xlabel('Values')
+    plt.ylabel('Frequency')
+    if save_location is not None:
+        # Save the figure
+        plt.savefig(save_location, bbox_inches='tight')
+        plt.close()
+    else:
+        plt.show()

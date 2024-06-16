@@ -1,6 +1,10 @@
 import pandas as pd
 import os
 import csv
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+from visualize import make_histogram
 
 # Directory containing the CSV files
 directory_path = "input_data/footbal-data-co-uk"
@@ -76,6 +80,7 @@ column_merges = {
     'FTHG': ['FTHG', 'HG'],
     'FTAG': ['FTAG', 'AG'],
 }
+
 
 def normalize_csv_file(input_file, output_file):
     # Read the CSV file to find the maximum number of fields in any row
@@ -195,7 +200,6 @@ combined_dataframe = read_and_combine_csv(
 for col_name, pos, value in insert_columns:
     combined_dataframe.insert(pos, col_name, value)
 
-
 combined_dataframe.columns = new_colum_names
 
 # pd.set_option('display.max_columns', None)   # Display all columns
@@ -226,3 +230,30 @@ print(df.columns)
 
 # Print the number of lines
 print(f"Number of lines in '{output_path}': {num_lines}")
+
+
+# Function to extract year from date
+def extract_year(date_str):
+    year = int(date_str[-2:])
+    if year <= 50:  # Assuming 00-50 are from 2000s
+        return 2000 + year
+    else:
+        return 1900 + year
+
+
+# Function to filter matches within a specific year range
+def filter_matches_by_year(df, start_year, end_year):
+    filtered_df = df
+    filtered_df['Year'] = filtered_df['Date'].apply(extract_year)
+    filtered_df = filtered_df[(filtered_df['Year'] >= start_year) & (filtered_df['Year'] <= end_year)]
+    filtered_df.drop(columns=['Year'], inplace=True)
+    return filtered_df
+
+
+# Filter matches between 2018 and 2020
+filtered_df = filter_matches_by_year(df, 1920, 2000)
+
+make_histogram(df['final_time_result'], 'final_time_result')
+make_histogram(abs(df['home_score'] - df['away_score']), 'goal differences')
+make_histogram(df['home_score'] - df['away_score'], 'home score - away score')
+make_histogram(filtered_df['final_time_result'], 'final_time_result')
