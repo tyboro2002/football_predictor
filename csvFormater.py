@@ -4,7 +4,7 @@ inp_file = "input_data/inp.csv"
 def askUser():
     # Writing to file
     with open(inp_file, "w") as file:
-        write("home_team, away_team, home_score, away_score, ball_possession_home_team, home_shots_on_target, away_shots_on_target, home_shots_wide_of_target, away_shots_wide_of_target, home_corners, away_corners, home_free_kicks, away_free_kicks, home_offside, away_offside, home_fouls, away_fouls, home_yellow_card, away_yellow_cards, home_red_cards, away_red_cards, home_penalty, away_penalty, home_penalty_missed, away_penalty_missed, home_goal_denied, away_goal_denied, home_substitute, away_substitute, home_own_goal, away_own_goal, first_half_extra_time, second_half_extra_time", file, end="\n")
+        write("home_team, away_team, home_score, away_score, ball_possession_home_team, home_shots_on_target, away_shots_on_target, home_shots_wide_of_target, away_shots_wide_of_target, home_corners, away_corners, home_free_kicks, away_free_kicks, home_offside, away_offside, home_fouls, away_fouls, home_yellow_cards, away_yellow_cards, home_red_cards, away_red_cards, home_penalty, away_penalty, home_penalty_missed, away_penalty_missed, home_goal_denied, away_goal_denied, home_substitute, away_substitute, home_own_goal, away_own_goal, first_half_extra_time, second_half_extra_time", file, end="\n")
         while True:
             # Writing data to a file
             ask("home_team", file)  # home_team
@@ -25,7 +25,7 @@ def askUser():
             ask("home_fouls", file)  # home_fouls
             ask("away_fouls", file)  # away_fouls
 
-            home_yellow_card = 0
+            home_yellow_cards = 0
             away_yellow_cards = 0
             home_red_cards = 0
             away_red_cards = 0
@@ -52,8 +52,8 @@ def askUser():
                 if "END" in code:
                     break
 
-                elif "RHY" in code and home_yellow_card >= num_retract:
-                    home_yellow_card -= num_retract
+                elif "RHY" in code and home_yellow_cards >= num_retract:
+                    home_yellow_cards -= num_retract
                 elif "RAY" in code and away_yellow_cards >= num_retract:
                     away_yellow_cards -= num_retract
                 elif "RHR" in code and home_red_cards >= num_retract:
@@ -85,7 +85,7 @@ def askUser():
                     second_half_extra = 0
 
                 elif "HY" in code and "R" not in code:
-                    home_yellow_card += num_retract
+                    home_yellow_cards += num_retract
                 elif "AY" in code and "R" not in code:
                     away_yellow_cards += num_retract
                 elif "HR" in code and "RHR" not in code:
@@ -124,7 +124,7 @@ def askUser():
                     except ValueError:
                         print(f"Invalid: {code}")
 
-            write(home_yellow_card, file)  # home_yellow_card
+            write(home_yellow_cards, file)  # home_yellow_cards
             write(away_yellow_cards, file)  # away_yellow_cards
             write(home_red_cards, file)  # home_red_cards
             write(away_red_cards, file)  # away_red_cards

@@ -1,8 +1,7 @@
 import pandas as pd
 import os
 import csv
-import seaborn as sns
-import matplotlib.pyplot as plt
+from settings import codes
 
 from visualize import make_histogram
 
@@ -36,14 +35,12 @@ new_colum_names = [
     'home_shots', 'away_shots',
     'home_shots_on_target', 'away_shots_on_target',
     'home_shots_wide_of_target', 'away_shots_wide_of_target',
-    'home_shots_hit_woodwork', 'away_shots_hit_woodwork',
     'home_corners', 'away_corners',
     'home_fouls', 'away_fouls',
     'home_free_kicks', 'away_free_kicks',
     'home_offside', 'away_offside',
-    'home_yellow_card', 'away_yellow_card',
+    'home_yellow_cards', 'away_yellow_cards',
     'home_red_cards', 'away_red_cards',
-    'home_team_bookings_points', 'away_team_bookings_points',
     'final_time_result',
     'home_penalty', 'away_penalty',
     'home_penalty_missed', 'away_penalty_missed',
@@ -219,10 +216,28 @@ print(combined_dataframe)
 #     print("The 'FTHG' column does not exist in the DataFrame.")
 
 # Optionally, save the combined DataFrame to a new CSV file
+
+# # Convert team columns to string representations
+# combined_dataframe['home_team'] = combined_dataframe['home_team'].apply(str)
+# combined_dataframe['away_team'] = combined_dataframe['away_team'].apply(str)
+#
+# # Replace numerical team values with their string representations
+# combined_dataframe['home_team'] = combined_dataframe['home_team'].map(codes)
+# combined_dataframe['away_team'] = combined_dataframe['away_team'].map(codes)
+
 combined_dataframe.to_csv(output_path, index=False)
 
 # Read the CSV file into a DataFrame
 df = pd.read_csv(output_path)
+
+# # Handle new team names not in the codes dictionary
+# max_code = max(codes.values(), default=0)
+# for team_col in ['home_team', 'away_team']:
+#     for team in df[team_col].unique():
+#         if team not in codes:
+#             print(f'"{team}": {max_code},')
+#             max_code += 1
+#             codes[team] = max_code
 
 # Count the number of rows in the DataFrame
 num_lines = df.shape[0]
@@ -251,9 +266,9 @@ def filter_matches_by_year(df, start_year, end_year):
 
 
 # Filter matches between 2018 and 2020
-filtered_df = filter_matches_by_year(df, 1920, 2000)
+# filtered_df = filter_matches_by_year(df, 1920, 2000)
 
-make_histogram(df['final_time_result'], 'final_time_result')
-make_histogram(abs(df['home_score'] - df['away_score']), 'goal differences')
-make_histogram(df['home_score'] - df['away_score'], 'home score - away score')
-make_histogram(filtered_df['final_time_result'], 'final_time_result')
+# make_histogram(df['final_time_result'], 'final_time_result')
+# make_histogram(abs(df['home_score'] - df['away_score']), 'goal differences')
+# make_histogram(df['home_score'] - df['away_score'], 'home score - away score')
+# make_histogram(filtered_df['final_time_result'], 'final_time_result')
