@@ -58,7 +58,13 @@ def calculate_recent_form(df, team_col, home_score_col, away_score_col, window=5
 
 def add_new_colls(df, rename_teams=False):
     if 'away_shots_hit_woodwork' in df.columns:
-        df = df.drop(['away_shots_hit_woodwork', 'away_team_bookings_points', 'home_shots_hit_woodwork', 'home_team_bookings_points'], axis=1)
+        df = df.drop(
+            [
+                'away_shots_hit_woodwork',
+                'away_team_bookings_points',
+                'home_shots_hit_woodwork',
+                'home_team_bookings_points'
+            ], axis=1)
     if rename_teams:
         # Convert team columns to string representations
         df['home'] = df['home'].apply(str)
