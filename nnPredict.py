@@ -7,8 +7,10 @@ import pandas as pd
 import numpy as np
 import random
 import joblib  # For saving and loading models
+from settings import codes
 
 retrain_model = True
+max_amount_of_training_matches = 1_000
 
 # Define a noise level
 noise_level = 5  # Adjust this value as needed
@@ -19,15 +21,6 @@ amount_of_non_noisy_predictions = 5
 amount_of_noisy_predictions = 30
 
 silent = True
-
-codes = {"Dender": 0, "Union": 1, "Anderlecht": 2, "Antwerpen": 3, "Club brugge": 4, "Cercle brugge": 5, "Krc genk": 6,
-         "Gent": 7, "Kv mechelen": 8, "Stvv": 9, "Standard": 10, "Westerlo": 11, "Oh leuven": 12, "Charleroi": 13,
-         "Kas eupen": 14, "Kv korterijk": 15, "Rwdm": 16,
-         "Germany": 17, "Scotland": 18, "Hungary": 19, "Switserland": 20, "Spain": 21, "Croatia": 22, "Italy": 23,
-         "Albania": 24, "Slovenia": 25, "Denmark": 26, "Serbia": 27, "England": 28, "Poland": 29, "Netherlands": 30,
-         "Austria": 31, "France": 32, "Belgium": 33, "Slovakia": 34, "Romania": 35, "Ukrain": 36, "Turkey": 37,
-         "Georgia": 38, "Portugal": 39, "Tsjechie": 40, "Canada": 41, "Maroco": 42
-         }
 
 
 # Function to calculate recent form
@@ -64,6 +57,8 @@ def calculate_recent_form(df, team_col, home_score_col, away_score_col, window=5
 
 
 def add_new_colls(df, rename_teams=False):
+    if 'away_shots_hit_woodwork' in df.columns:
+        df = df.drop(['away_shots_hit_woodwork', 'away_team_bookings_points', 'home_shots_hit_woodwork', 'home_team_bookings_points'], axis=1)
     if rename_teams:
         # Convert team columns to string representations
         df['home'] = df['home'].apply(str)
@@ -140,14 +135,14 @@ def add_new_colls(df, rename_teams=False):
 
 if retrain_model:
 
-    match_data = parse_match_list(match_list_location)
+    match_data = parse_match_list(match_list_location)[:max_amount_of_training_matches]
     print(len(match_data))
     df = pd.DataFrame([data.__dict__ for data in match_data])
 
-    df = add_new_colls(df, rename_teams=True)
+    df = add_new_colls(df, rename_teams=True).sort_index(axis=1)
 
     # Assuming you have a DataFrame called 'data' containing your features and target variable
-    X = df.drop(['home_score', 'away_score'], axis=1)
+    X = df.drop(['home_score', 'away_score', 'Div', 'Date', 'Time', 'final_time_result', 'source_file'], axis=1)
     y_home = df['home_score']
     y_away = df['away_score']
 
@@ -292,7 +287,7 @@ for model_home_path, model_away_path in zip(home_models, away_models):
     new_data = pd.read_csv("input_data/toPredict.csv")  # Your new data for prediction
     new_data.columns = new_data.columns.map(lambda x: x.strip() if isinstance(x, str) else x)
 
-    new_data = add_new_colls(new_data)  # add the columns we make from the data
+    new_data = add_new_colls(new_data).sort_index(axis=1)  # add the columns we make from the data
 
     X_new = new_data.drop(['home_score', 'away_score'], axis=1)
     y_home_new = new_data['home_score']

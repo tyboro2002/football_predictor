@@ -26,7 +26,7 @@ def check_match_list(matches):
             "away_offside",
             "home_fouls",
             "away_fouls",
-            "home_yellow_card",
+            "home_yellow_cards",
             "away_yellow_cards",
             "home_red_cards",
             "away_red_cards",
@@ -75,7 +75,7 @@ class FootballGame:
         self.away_offside = 0
         self.home_fouls = 0
         self.away_fouls = 0
-        self.home_yellow_card = 0
+        self.home_yellow_cards = 0
         self.away_yellow_cards = 0
         self.home_red_cards = 0
         self.away_red_cards = 0

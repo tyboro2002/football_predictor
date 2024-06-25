@@ -17,22 +17,41 @@ def get_teams_before_class(seasons_back, division):
 
 
 def parse_match_list(save_location):
+    matches = []
     with open(save_location, "r", encoding="utf-8") as file:
-        teams = [Team(team_name.strip()) for team_name in file.readline().split(",")]
-        titles = [word.strip() for word in file.readline().split(",")]
-        lines = [line.strip() for line in file.readlines()]
-        matches = []
-        for line in lines:
-            if not line.startswith("#") and line.strip():
-                line = line.split(",")
-                match_data = {titles[i]: line[i].strip() for i in range(len(titles))}
-                home_team = teams[int(match_data['home_team'])]
-                away_team = teams[int(match_data['away_team'])]
-                match = FootballGame(home_team, away_team)
-                for key, value in match_data.items():
-                    if key not in ['home_team', 'away_team']:
-                        setattr(match, key, int(value))
-                matches.append(match)
+        first_line = file.readline()
+        if first_line == "Team-First":
+            teams = [Team(team_name.strip()) for team_name in file.readline().split(",")]
+            titles = [word.strip() for word in file.readline().split(",")]
+            lines = [line.strip() for line in file.readlines()]
+            for line in lines:
+                if not line.startswith("#") and line.strip():
+                    line = line.split(",")
+                    match_data = {titles[i]: line[i].strip() for i in range(len(titles))}
+                    home_team = teams[int(match_data['home_team'])]
+                    away_team = teams[int(match_data['away_team'])]
+                    match = FootballGame(home_team, away_team)
+                    for key, value in match_data.items():
+                        if key not in ['home_team', 'away_team']:
+                            setattr(match, key, int(value))
+                    matches.append(match)
+        else:
+            titles = [word.strip() for word in first_line.split(",")]
+            lines = [line.strip() for line in file.readlines()]
+            for line in lines:
+                if not line.startswith("#") and line.strip():
+                    line = line.split(",")
+                    match_data = {titles[i]: line[i].strip() for i in range(len(titles))}
+                    home_team = line[titles.index('home_team')]
+                    away_team = line[titles.index('away_team')]
+                    match = FootballGame(home_team, away_team)
+                    for key, value in match_data.items():
+                        if key not in ['home_team', 'away_team']:
+                            try:
+                                setattr(match, key, int(value))
+                            except ValueError:
+                                setattr(match, key, value)
+                    matches.append(match)
 
         return matches
 
@@ -64,7 +83,7 @@ def create_df_from_matchList(matches: List[FootballGame]):
             "offside_conceded": match.away_offside,
             "fouls": match.home_fouls,
             "fouls_conceded": match.away_fouls,
-            "yellow_cards": match.home_yellow_card,
+            "yellow_cards": match.home_yellow_cards,
             "yellow_cards_opponent": match.away_yellow_cards,
             "red_cards": match.home_red_cards,
             "red_cards_opponent": match.away_red_cards,
@@ -104,7 +123,7 @@ def create_df_from_matchList(matches: List[FootballGame]):
             "fouls": match.away_fouls,
             "fouls_conceded": match.home_fouls,
             "yellow_cards": match.away_yellow_cards,
-            "yellow_cards_opponent": match.home_yellow_card,
+            "yellow_cards_opponent": match.home_yellow_cards,
             "red_cards": match.away_red_cards,
             "red_cards_opponent": match.home_red_cards,
             "penalty": match.away_penalty,
